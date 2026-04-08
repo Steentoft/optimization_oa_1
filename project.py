@@ -41,7 +41,7 @@ def favour_smoothness(x):
 def avoid_obstacles(x):
     sum = 0.0
     for i in range(len(x)):
-        sum += penalty_1(x[i])
+        sum += penalty_2(x[i])
     return sum
 
 def circular_obstacle(x, obstacle):
