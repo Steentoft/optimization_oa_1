@@ -86,9 +86,7 @@ for e in range(epochs):
     for n in range(1, len(new_line - 1)):
         new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
         # new_line[n] = new_line[n] + np.array([2,0.3])
-
-    ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label="Initial Path")
-
+        
     if objective_function(new_line) < objective_function(best_line):
         best_line = new_line
 
