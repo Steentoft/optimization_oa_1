@@ -72,30 +72,46 @@ def penalty_2(x, alpha=1):
         penalty += np.exp(-alpha*(circular_obstacle(x, obstacles[i])**2-obstacles[i][1]**2))
     return penalty
 
-def objective_function(x, lam=1, u=1, epsilon=2):
-    return sum(path_length(x)+lam*favour_smoothness(x)+u*avoid_obstacles(x)+longest_point(x)**epsilon)
+def objective_function(x, lam=1, u=1, epsilon=1):
+    return sum(path_length(x)+lam*favour_smoothness(x)+u*avoid_obstacles(x)+longest_point(x)*epsilon), np.gradient(x)
 
+# NOT WORKING
+def momentum_step(x,mom_v,lr=0.1,mom_decay=0.1):
+    mom_v = np.zeros_like(x[:-1])
+    print(x[:-1])
+    mom_v = mom_decay * mom_v - lr * np.linalg.norm(np.gradient(x[:-1]))
+    return x[:-1] + mom_v
 
-epochs = 1000
+epochs = 20
 best_line = x_init_line
+best_objective_value, best_gradient_array = objective_function(best_line)
 
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 
 for e in range(epochs):
     new_line = np.copy(best_line)
-    for n in range(1, len(new_line - 1)):
-        new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
-        # new_line[n] = new_line[n] + np.array([2,0.3])
-        
-    if objective_function(new_line) < objective_function(best_line):
+
+    # for n in range(1, len(new_line - 1)):
+    #     # new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
+    #     # new_line[n] = new_line[n] + np.array([2,0.3])
+    
+    new_objective_value, new_gradient_array = objective_function(new_line)    
+    
+    new_line = momentum_step(new_line,new_gradient_array)
+
+    ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+
+
+    if new_objective_value < best_objective_value:
         best_line = new_line
 
 
-ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
+
+ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
 print(longest_point(best_line))
 
-ax.set_xlim(-1, 11)
-ax.set_ylim(-1, 11)
+ax.set_xlim(-11, 11)
+ax.set_ylim(-11, 11)
 ax.legend()
 
 plt.show()
