@@ -23,9 +23,8 @@ x_init_line = np.linspace(x_start,x_end,n_points)
 for j in range(len(obstacles)):
     ax.add_patch(plt.Circle(obstacles[j][0],obstacles[j][1],color=obstacles[j][2]))
 
-########## Task 2 ##########
-# obj_func = f_L + lambda * f_S + my * f_O
 
+########## Task 2 ##########
 
 def path_length(x):
     sum = 0.0
@@ -42,17 +41,26 @@ def favour_smoothness(x):
 def avoid_obstacles(x):
     sum = 0.0
     for i in range(len(x)):
-        sum += penalty_2(x[i])
+        sum += penalty_1(x[i])
     return sum
 
 def circular_obstacle(x, obstacle):
     return abs(x-obstacle[0])
 
+# Attempt at point length penalizing
+def longest_point(x):
+    longest_distance = np.linalg.norm(x[1]-x[0])
+    for i in range(len(x)-1):
+        point_dist = np.linalg.norm(x[i+1]-x[i])
+        if longest_distance < point_dist:
+            longest_distance = point_dist
+    return longest_distance
+
 
 def penalty_1(x):
     penalty = 0.0
     for i in range(len(obstacles)):
-        if (circular_obstacle(x, obstacles[i]) > obstacles[i][1]).any():
+        if (np.linalg.norm(circular_obstacle(x, obstacles[i]) > obstacles[i][1])):
             penalty += 1/(circular_obstacle(x, obstacles[i])-obstacles[i][1])**2
         else:
             penalty += math.inf
@@ -64,11 +72,11 @@ def penalty_2(x, alpha=1):
         penalty += np.exp(-alpha*(circular_obstacle(x, obstacles[i])**2-obstacles[i][1]**2))
     return penalty
 
-def objective_function(x, lam=1, u=1):
-    return sum(path_length(x)+lam*favour_smoothness(x)+u*avoid_obstacles(x))
+def objective_function(x, lam=1, u=1, epsilon=2):
+    return sum(path_length(x)+lam*favour_smoothness(x)+u*avoid_obstacles(x)+longest_point(x)**epsilon)
 
 
-epochs = 100
+epochs = 1000
 best_line = x_init_line
 
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
@@ -77,13 +85,16 @@ for e in range(epochs):
     new_line = np.copy(best_line)
     for n in range(1, len(new_line - 1)):
         new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
+        # new_line[n] = new_line[n] + np.array([2,0.3])
 
-    best_line = new_line
+    ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label="Initial Path")
 
-    if objective_function(new_line) > objective_function(best_line):
+    if objective_function(new_line) < objective_function(best_line):
         best_line = new_line
 
+
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
+print(longest_point(best_line))
 
 ax.set_xlim(-1, 11)
 ax.set_ylim(-1, 11)
@@ -95,5 +106,7 @@ plt.show()
 
 # Adding something to penalize big spacing between points. Potentially recreating the line
 # points so they are equally spread?
+
+# Path length doesn't work, but maybe a longest distance between two points should be a objective value as well.
 
 # For case 2, think of doing homemade optimizers.
