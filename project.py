@@ -33,10 +33,14 @@ for j in range(len(obstacles)):
 ### Path Length
 
 def f_L(x):
-    sum = 0.0
-    for i in range(len(x)-1):
-        sum += abs(x[i+1]-x[i])**2
-    return an.sum(sum)
+    # For loop version... No bueno
+    # sum = 0.0
+    # for i in range(len(x)-1):
+    #     sum += abs(x[i+1]-x[i])**2
+    # return an.sum(sum)
+
+    differences = x[1:] - x[:-1]
+    return an.sum(differences**2)
 
 
 def gradient_f_L(x):
@@ -44,35 +48,33 @@ def gradient_f_L(x):
 
 ### Smoothness
 def f_S(x):
-    sum = 0.0
-    for i in range(len(x)-1):
-        sum += abs(x[i+1]-2*x[i]+x[i-1])**2
-    return an.sum(sum)
+    # For loop version
+    # sum = 0.0
+    # for i in range(1,len(x)-1):
+    #     sum += abs(x[i+1]-2*x[i]+x[i-1])**2
+    # return an.sum(sum)
+
+    differences = x[2:] - 2 * x[1:-1] + x[:-2]
+    return an.sum(differences**2)
 
 def gradient_f_S(x):
     return grad(f_S)(x)
 
 ### Obstacle Avoidance
-
 def f_O(x):
+    # For loop version, should also be vectorized.
     sum = 0.0
     for i in range(len(x)):
         sum += penalty_2(x[i],obstacles)
     return an.sum(sum)
 
+    
+
 def gradient_f_O(x):
     return grad(f_O)(x)
 
-def f_Ld(x):
-    longest_distance = an.linalg.norm(x[1]-x[0])
-    for i in range(len(x)-1):
-        point_dist = an.linalg.norm(x[i+1]-x[i])
-        if longest_distance < point_dist:
-            longest_distance = point_dist
-    return longest_distance
 
-def gradient_f_Ld(x):
-    return grad(f_Ld)(x)
+
 ### Penalties
 
 def penalty_2(x, obstacles, alpha=1):
@@ -84,12 +86,12 @@ def penalty_2(x, obstacles, alpha=1):
 def circular_obstacle(x, obstacle):
     return abs(x-obstacle[0])
 
-def objective_function(x, lam=1, u=10, epsilon=1):
+def objective_function(x, lam=1, u=10):
     # Objective Value
-    objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x)+f_Ld(x)*epsilon)
+    objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x))
 
     # Gradient
-    gradient = gradient_f_L(x) + gradient_f_S(x) + gradient_f_O(x) + gradient_f_Ld(x)
+    gradient = gradient_f_L(x) + gradient_f_S(x) + gradient_f_O(x)
 
     return objective_value, gradient
 
@@ -101,12 +103,12 @@ best_objective_value, best_gradient_array = objective_function(best_line)
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 
 # NOT WORKING -> needing gradient fixes | Momentum
-velocity = np.zeros_like(best_line[1:-1])
+velocity = np.zeros_like(best_line)
 
-def momentum_step(x,mom_v,lr=0.5,mom_decay=0.1):
-    mom_v = mom_decay * mom_v - lr * np.linalg.norm(np.gradient(x[:-1]))
-    x[1:-1] = x[1:-1] - mom_v[1:-1]
-    return x, mom_v 
+def momentum_step(x,gradient,velocity,lr=0.005,beta=0.9):
+    velocity = beta * velocity - lr * gradient
+    x[1:-1] = x[1:-1] + velocity[1:-1]
+    return x, velocity 
 
 def gradient_descent(starting_points, learning_rate=0.005, iterations=100):
     x = starting_points
@@ -118,26 +120,26 @@ def gradient_descent(starting_points, learning_rate=0.005, iterations=100):
 
 test = gradient_descent(x_init_line)
 
-ax.plot(test[:, 0], test[:, 1], marker='.', label=f"New Path no")
+ax.plot(test[:, 0], test[:, 1], marker='.', label=f"Gradient Descent Path")
 
 for e in range(epochs):
     new_line = np.copy(best_line)
 
+    # Old without optimizers
     # for n in range(1, len(new_line - 1)):
     #     # new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
     #     # new_line[n] = new_line[n] + np.array([2,0.3])
     
     new_objective_value, new_gradient_array = objective_function(new_line)    
 
+    best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.02, beta=0.6)
 
-    new_line = momentum_step(new_line,new_gradient_array)[0]
-
-    print(new_line)
-    ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+    #ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+    
 
 
-    if new_objective_value < best_objective_value:
-        best_line = new_line
+    # if new_objective_value < best_objective_value:
+    #     best_line = new_line
 
 
 
