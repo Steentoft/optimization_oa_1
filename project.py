@@ -63,6 +63,16 @@ def f_O(x):
 def gradient_f_O(x):
     return grad(f_O)(x)
 
+def f_Ld(x):
+    longest_distance = an.linalg.norm(x[1]-x[0])
+    for i in range(len(x)-1):
+        point_dist = an.linalg.norm(x[i+1]-x[i])
+        if longest_distance < point_dist:
+            longest_distance = point_dist
+    return longest_distance
+
+def gradient_f_Ld(x):
+    return grad(f_Ld)(x)
 ### Penalties
 
 def penalty_2(x, obstacles, alpha=1):
@@ -76,13 +86,12 @@ def circular_obstacle(x, obstacle):
 
 def objective_function(x, lam=1, u=10, epsilon=1):
     # Objective Value
-    objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x)) #+longest_point(x)*epsilon
+    objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x)+f_Ld(x)*epsilon)
 
     # Gradient
-    gradient = gradient_f_L(x) + gradient_f_S(x) + gradient_f_O(x) 
+    gradient = gradient_f_L(x) + gradient_f_S(x) + gradient_f_O(x) + gradient_f_Ld(x)
 
     return objective_value, gradient
-
 
 
 epochs = 20
@@ -94,10 +103,9 @@ ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 # NOT WORKING -> needing gradient fixes | Momentum
 velocity = np.zeros_like(best_line[1:-1])
 
-def momentum_step(x,mom_v,lr=0.1,mom_decay=0.1):
-    
+def momentum_step(x,mom_v,lr=0.5,mom_decay=0.1):
     mom_v = mom_decay * mom_v - lr * np.linalg.norm(np.gradient(x[:-1]))
-    x[1:-1] = x[1:-1] + mom_v[1:-1]
+    x[1:-1] = x[1:-1] - mom_v[1:-1]
     return x, mom_v 
 
 def gradient_descent(starting_points, learning_rate=0.005, iterations=100):
@@ -119,15 +127,13 @@ for e in range(epochs):
     #     # new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
     #     # new_line[n] = new_line[n] + np.array([2,0.3])
     
-    new_objective_value, new_gradient_array = objective_function(new_line)
+    new_objective_value, new_gradient_array = objective_function(new_line)    
 
-    print(new_objective_value)
-    print(new_gradient_array)
-    
-    new_line = momentum_step(new_line,new_gradient_array)[1]
+
+    new_line = momentum_step(new_line,new_gradient_array)[0]
 
     print(new_line)
-    #ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+    ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
 
 
     if new_objective_value < best_objective_value:
@@ -135,7 +141,7 @@ for e in range(epochs):
 
 
 
-#ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
+ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
 
 ax.set_xlim(-11, 11)
 ax.set_ylim(-11, 11)
