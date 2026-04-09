@@ -30,6 +30,8 @@ for j in range(len(obstacles)):
 ########## Task 2 ##########
 
 
+### Path Length
+
 def f_L(x):
     sum = 0.0
     for i in range(len(x)-1):
@@ -40,7 +42,7 @@ def f_L(x):
 def gradient_f_L(x):
     return grad(f_L)(x)
 
-
+### Smoothness
 def f_S(x):
     sum = 0.0
     for i in range(len(x)-1):
@@ -50,7 +52,8 @@ def f_S(x):
 def gradient_f_S(x):
     return grad(f_S)(x)
 
-    
+### Obstacle Avoidance
+
 def f_O(x):
     sum = 0.0
     for i in range(len(x)):
@@ -60,6 +63,7 @@ def f_O(x):
 def gradient_f_O(x):
     return grad(f_O)(x)
 
+### Penalties
 
 def penalty_2(x, obstacles, alpha=1):
     penalty = 0.0
@@ -70,7 +74,7 @@ def penalty_2(x, obstacles, alpha=1):
 def circular_obstacle(x, obstacle):
     return abs(x-obstacle[0])
 
-def objective_function(x, lam=1, u=1, epsilon=1):
+def objective_function(x, lam=1, u=10, epsilon=1):
     # Objective Value
     objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x)) #+longest_point(x)*epsilon
 
@@ -78,6 +82,7 @@ def objective_function(x, lam=1, u=1, epsilon=1):
     gradient = gradient_f_L(x) + gradient_f_S(x) + gradient_f_O(x) 
 
     return objective_value, gradient
+
 
 
 epochs = 20
@@ -95,6 +100,17 @@ def momentum_step(x,mom_v,lr=0.1,mom_decay=0.1):
     x[1:-1] = x[1:-1] + mom_v[1:-1]
     return x, mom_v 
 
+def gradient_descent(starting_points, learning_rate=0.005, iterations=100):
+    x = starting_points
+    for i in range(iterations):
+        new_objective_value, new_gradient_array = objective_function(x)
+        for j in range(len(x)):
+            x[j] = x[j] - learning_rate * new_gradient_array[j] # update step
+    return x
+
+test = gradient_descent(x_init_line)
+
+ax.plot(test[:, 0], test[:, 1], marker='.', label=f"New Path no")
 
 for e in range(epochs):
     new_line = np.copy(best_line)
@@ -103,12 +119,15 @@ for e in range(epochs):
     #     # new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
     #     # new_line[n] = new_line[n] + np.array([2,0.3])
     
-    new_objective_value, new_gradient_array = objective_function(new_line)    
+    new_objective_value, new_gradient_array = objective_function(new_line)
+
+    print(new_objective_value)
+    print(new_gradient_array)
     
     new_line = momentum_step(new_line,new_gradient_array)[1]
 
     print(new_line)
-    ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+    #ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
 
 
     if new_objective_value < best_objective_value:
@@ -116,7 +135,7 @@ for e in range(epochs):
 
 
 
-ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
+#ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
 
 ax.set_xlim(-11, 11)
 ax.set_ylim(-11, 11)
