@@ -104,12 +104,12 @@ for e in range(epochs):
     #     # new_line[n] = new_line[n] + np.array([2,0.3])
     
     new_objective_value, new_gradient_array = objective_function(new_line)    
-    
+
+
     new_line = momentum_step(new_line,new_gradient_array)[1]
 
     print(new_line)
     ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
-
 
     if new_objective_value < best_objective_value:
         best_line = new_line
