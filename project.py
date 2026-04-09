@@ -3,6 +3,9 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+import autograd.numpy as an
+from autograd import grad
+
 
 ########## Task 1 ##########
 x_start = np.array([0.0,0.0])
@@ -26,60 +29,55 @@ for j in range(len(obstacles)):
 
 ########## Task 2 ##########
 
-def path_length(x):
+
+def f_L(x):
     sum = 0.0
     for i in range(len(x)-1):
         sum += abs(x[i+1]-x[i])**2
-    return sum
+    return an.sum(sum)
 
-def favour_smoothness(x):
+
+def gradient_f_L(x):
+    return grad(f_L)(x)
+
+
+def f_S(x):
     sum = 0.0
     for i in range(len(x)-1):
         sum += abs(x[i+1]-2*x[i]+x[i-1])**2
-    return sum
+    return an.sum(sum)
 
-def avoid_obstacles(x):
+def gradient_f_S(x):
+    return grad(f_S)(x)
+
+    
+def f_O(x):
     sum = 0.0
     for i in range(len(x)):
-        sum += penalty_2(x[i])
-    return sum
+        sum += penalty_2(x[i],obstacles)
+    return an.sum(sum)
+
+def gradient_f_O(x):
+    return grad(f_O)(x)
+
+
+def penalty_2(x, obstacles, alpha=1):
+    penalty = 0.0
+    for i in range(len(obstacles)):
+        penalty += an.exp(-alpha*(circular_obstacle(x, obstacles[i])**2-obstacles[i][1]**2))
+    return penalty
 
 def circular_obstacle(x, obstacle):
     return abs(x-obstacle[0])
 
-# Attempt at point length penalizing
-def longest_point(x):
-    longest_distance = np.linalg.norm(x[1]-x[0])
-    for i in range(len(x)-1):
-        point_dist = np.linalg.norm(x[i+1]-x[i])
-        if longest_distance < point_dist:
-            longest_distance = point_dist
-    return longest_distance
-
-
-def penalty_1(x):
-    penalty = 0.0
-    for i in range(len(obstacles)):
-        if (np.linalg.norm(circular_obstacle(x, obstacles[i]) > obstacles[i][1])):
-            penalty += 1/(circular_obstacle(x, obstacles[i])-obstacles[i][1])**2
-        else:
-            penalty += math.inf
-    return penalty
-
-def penalty_2(x, alpha=1):
-    penalty = 0.0
-    for i in range(len(obstacles)):
-        penalty += np.exp(-alpha*(circular_obstacle(x, obstacles[i])**2-obstacles[i][1]**2))
-    return penalty
-
 def objective_function(x, lam=1, u=1, epsilon=1):
     # Objective Value
-    objective_value = sum(path_length(x)+lam*favour_smoothness(x)+u*avoid_obstacles(x)+longest_point(x)*epsilon)
+    objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x)) #+longest_point(x)*epsilon
 
-    # Gradient | No clue how should be implemented
-    
+    # Gradient
+    gradient = gradient_f_L(x) + gradient_f_S(x) + gradient_f_O(x) 
 
-    return objective_value
+    return objective_value, gradient
 
 
 epochs = 20
@@ -89,13 +87,13 @@ best_objective_value, best_gradient_array = objective_function(best_line)
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 
 # NOT WORKING -> needing gradient fixes | Momentum
-velocity = np.zeros_like(best_line[1:-1]) # Taken out of function. Should not zero every step.
+velocity = np.zeros_like(best_line[1:-1])
 
 def momentum_step(x,mom_v,lr=0.1,mom_decay=0.1):
-    print(x[:-1])
+    
     mom_v = mom_decay * mom_v - lr * np.linalg.norm(np.gradient(x[:-1]))
-    x[1:-1] = x[1:-1] + mom_v
-    return x, mom_v # Split up to be able to save the previous momentum vectors.
+    x[1:-1] = x[1:-1] + mom_v[1:-1]
+    return x, mom_v 
 
 
 for e in range(epochs):
@@ -107,8 +105,9 @@ for e in range(epochs):
     
     new_objective_value, new_gradient_array = objective_function(new_line)    
     
-    new_line = momentum_step(new_line,new_gradient_array)
+    new_line = momentum_step(new_line,new_gradient_array)[1]
 
+    print(new_line)
     ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
 
 
@@ -118,7 +117,6 @@ for e in range(epochs):
 
 
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
-print(longest_point(best_line))
 
 ax.set_xlim(-11, 11)
 ax.set_ylim(-11, 11)
