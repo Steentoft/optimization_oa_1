@@ -74,7 +74,6 @@ def f_O(x):
 def gradient_f_O(x):
     return grad(f_O)(x)
 
-
 ### Penalties
 
 def penalty_1(x, obstacles):
@@ -94,7 +93,7 @@ def penalty_2(x, obstacles, alpha=1):
 
 
 def circular_obstacle(x, obstacle):
-    return an.linalg.norm(an.sqrt((obstacle[0][0]-x[0])**2+(obstacle[0][1]-x[1])**2))
+    return an.linalg.norm(obstacle[0] - x)
 
 
 def objective_function(x, lam=1, u=10):
@@ -108,11 +107,10 @@ def objective_function(x, lam=1, u=10):
 
 
 best_line = x_init_line
-
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 
 epochs = 100
-learning_rate = 0.02
+learning_rate = 0.01
 
 ### Gradient Descent ###
 for e in range(epochs):
@@ -124,10 +122,9 @@ for e in range(epochs):
         new_line[j] = (new_line[j] - (learning_rate * new_gradient_array[j])) #Update step
 
 
-    #if objective_function(new_line)[0] < objective_function(best_line)[0]:
-    best_line = new_line
+    if objective_function(new_line)[0] < objective_function(best_line)[0]:
+        best_line = new_line
 
-    #ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"{e}")
 
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
 
