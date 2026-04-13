@@ -13,8 +13,10 @@ x_end = np.array ([7.0, 10.0])
 
 # (Point, Radius, Color)
 obstacles = [
-    (np.array([2,4]), 1.3, 'blue'),
-    (np.array([5,7]), 1.0,'orange')
+    (np.array([3.5,5]), 2.5, 'blue'),
+    (np.array([9,2]), 0.5, 'orange')
+    # (np.array([2,4]), 1.3, 'blue'),
+    # (np.array([5,7]), 1.0,'orange')
 ]
 
 fig, ax = plt.subplots(figsize=(6, 6))
@@ -22,6 +24,14 @@ fig, ax = plt.subplots(figsize=(6, 6))
 n_points = 75
 
 x_init_line = np.linspace(x_start,x_end,n_points)
+
+# Add some noise to the init line to make sure it doesn't get a stuck gradient
+noise = np.random.normal(0,0.001,size=x_init_line.shape)
+noise[0] = [0.0,0.0]
+noise[-1] = [0.0,0.0]
+
+x_init_line += noise
+
 
 for j in range(len(obstacles)):
     ax.add_patch(plt.Circle(obstacles[j][0],obstacles[j][1],color=obstacles[j][2]))
@@ -68,14 +78,21 @@ def f_O(x):
         sum += penalty_2(x[i],obstacles)
     return an.sum(sum)
 
-    
 
 def gradient_f_O(x):
     return grad(f_O)(x)
 
 
-
 ### Penalties
+def penalty_1(x, obstacles):
+    penalty = 0.0
+    for i in range(len(obstacles)):
+        dist = circular_obstacle(x, obstacles[i])
+        r = obstacles[i][1]
+
+        penalty += an.where(dist > r, 1 / (dist - r)**2, 999999)
+
+    return penalty
 
 def penalty_2(x, obstacles, alpha=1):
     penalty = 0.0
@@ -84,7 +101,7 @@ def penalty_2(x, obstacles, alpha=1):
     return penalty
 
 def circular_obstacle(x, obstacle):
-    return abs(x-obstacle[0])
+    return an.linalg.norm(obstacle[0] - x)
 
 def objective_function(x, lam=1, u=10):
     # Objective Value
@@ -96,13 +113,13 @@ def objective_function(x, lam=1, u=10):
     return objective_value, gradient
 
 
-epochs = 20
+epochs = 1000
 best_line = x_init_line
 best_objective_value, best_gradient_array = objective_function(best_line)
 
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 
-# NOT WORKING -> needing gradient fixes | Momentum
+# Momentum
 velocity = np.zeros_like(best_line)
 
 def momentum_step(x,gradient,velocity,lr=0.005,beta=0.9):
@@ -110,43 +127,22 @@ def momentum_step(x,gradient,velocity,lr=0.005,beta=0.9):
     x[1:-1] = x[1:-1] + velocity[1:-1]
     return x, velocity 
 
-def gradient_descent(starting_points, learning_rate=0.005, iterations=100):
-    x = starting_points
-    for i in range(iterations):
-        new_objective_value, new_gradient_array = objective_function(x)
-        for j in range(len(x)):
-            x[j] = x[j] - learning_rate * new_gradient_array[j] # update step
-    return x
-
-test = gradient_descent(x_init_line)
-
-ax.plot(test[:, 0], test[:, 1], marker='.', label=f"Gradient Descent Path")
-
 for e in range(epochs):
     new_line = np.copy(best_line)
-
-    # Old without optimizers
-    # for n in range(1, len(new_line - 1)):
-    #     # new_line[n] = new_line[n] + 0.01*(penalty_2(new_line[n]) * np.gradient(new_line[n]))
-    #     # new_line[n] = new_line[n] + np.array([2,0.3])
     
     new_objective_value, new_gradient_array = objective_function(new_line)    
 
     best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.02, beta=0.6)
 
     #ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
-    
 
-
-    # if new_objective_value < best_objective_value:
-    #     best_line = new_line
 
 
 
 ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
 
-ax.set_xlim(-11, 11)
-ax.set_ylim(-11, 11)
+ax.set_xlim(-1, 11)
+ax.set_ylim(-1, 11)
 ax.legend()
 
 plt.show()
