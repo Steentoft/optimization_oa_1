@@ -13,10 +13,12 @@ x_end = np.array ([7.0, 10.0])
 
 # (Point, Radius, Color)
 obstacles = [
-    # (np.array([3.5,5]), 2.5, 'blue'),
-    # (np.array([9,2]), 0.5, 'orange')
     (np.array([2,4]), 1.3, 'blue'),
-    (np.array([5,7]), 1.0,'orange')
+    (np.array([5,7]), 1.0,'orange'),
+    # (np.array([3.5,5]), 2.5, 'blue'),
+    # (np.array([9,2]), 0.5, 'orange'),
+    # (np.array([0,3.5]), 3.0,'red'),
+    # (np.array([5,3]), 3.0,'pink')
 ]
 
 fig, ax = plt.subplots(figsize=(6, 6))
@@ -90,7 +92,7 @@ def penalty_1(x, obstacles):
         dist = circular_obstacle(x, obstacles[i])
         r = obstacles[i][1]
 
-        penalty += an.where(dist > r, 1 / (dist - r)**2, 999999)
+        penalty += an.where(dist > r, 1 / (dist - r)**2, an.inf)
 
     return penalty
 
@@ -113,7 +115,7 @@ def objective_function(x, lam=1, u=10):
     return objective_value, gradient
 
 
-epochs = 1000
+epochs = 200
 best_line = x_init_line
 best_objective_value, best_gradient_array = objective_function(best_line)
 
@@ -134,7 +136,9 @@ for e in range(epochs):
 
     best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.02, beta=0.6)
 
-    #ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+    if e % 10 == 0:
+        print(e)
+        ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
 
 
 

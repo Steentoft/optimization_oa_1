@@ -26,10 +26,10 @@ print("number of training samples: " + str(len(train_dataset)) + "\n" +
 print("datatype of the 1st training sample: ", train_dataset[0][0].type())
 print("size of the 1st training sample: ", train_dataset[0][0].size())
 
-batch_size = 258
+batch_size = 64
 
 # Create data loaders.
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=len(train_dataset), shuffle=True)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 # Verify size of batches
@@ -104,6 +104,8 @@ train_losses = []
 test_losses = []
 test_accuracies = []
 
+#### SCHEDULER??
+
 step = 0
 for epoch in range(n_epochs):
     model.train()
@@ -134,19 +136,18 @@ for epoch in range(n_epochs):
     print(f'Epoch {epoch} Loss {test_loss}')
 
     test_losses.append((step, test_loss))
-    test_accuracies.append((step, test_accuracy))
+    test_accuracies.append(test_accuracy.item())
+
     print(f'Test set: Average loss: {test_loss}, \
         Accuracy: {correct}/{len(test_loader.dataset)} ({test_accuracy}%)')
-
 
 
 # plot train and test losses to file loss.png
 train_steps, train_loss = zip(*train_losses)
 test_steps, test_loss = zip(*test_losses)
-test_steps, test_accuracy = zip(*test_accuracies)
+#test_steps, test_accuracy = zip(*test_accuracies)
 
-
-fig, ax = plt.subplots(2, 1, figsize=(8, 6), sharex=True)  # sharex aligns x-axes
+fig, ax = plt.subplots(3, 1, figsize=(8, 6), sharex=True)  # sharex aligns x-axes
 
 # Plot the first
 ax[0].plot(train_steps, train_loss, label="Train Loss", color="blue")
@@ -165,10 +166,10 @@ ax[1].legend()
 ax[1].grid(True)
 
 # Plot the Third
-ax[0].plot(test_steps, test_accuracies, label="Test Accuracy", color="green")
-ax[0].set_ylabel("Accuracy (%)")
-ax[0].legend()
-ax[0].grid(True)
+ax[2].plot(test_steps, test_accuracies, label="Test Accuracy", color="green")
+ax[2].set_ylabel("Accuracy (%)")
+ax[2].legend()
+ax[2].grid(True)
 
 # Adjust layout and show the plot
 plt.tight_layout()
