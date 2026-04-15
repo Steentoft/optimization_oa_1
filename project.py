@@ -13,10 +13,10 @@ x_end = np.array ([7.0, 10.0])
 
 # (Point, Radius, Color)
 obstacles = [
-    (np.array([3.5,5]), 2.5, 'blue'),
-    (np.array([9,2]), 0.5, 'orange')
-    # (np.array([2,4]), 1.3, 'blue'),
-    # (np.array([5,7]), 1.0,'orange')
+    # (np.array([3.5,5]), 2.5, 'blue'),
+    # (np.array([9,2]), 0.5, 'orange')
+    (np.array([2,4]), 1.3, 'blue'),
+    (np.array([5,7]), 1.0,'orange')
 ]
 
 fig, ax = plt.subplots(figsize=(6, 6))
