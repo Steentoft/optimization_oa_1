@@ -26,7 +26,7 @@ print("number of training samples: " + str(len(train_dataset)) + "\n" +
 print("datatype of the 1st training sample: ", train_dataset[0][0].type())
 print("size of the 1st training sample: ", train_dataset[0][0].size())
 
-batch_size = 128
+batch_size = 258
 
 # Create data loaders.
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
@@ -87,7 +87,7 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "LBFGSlr0,006StrongWolfeBatchSize128"
+optimizer_name = "LBFGSlr0,006StrongWolfeBatchSize258"
 criterion_name = "CrEntLoss" 
 
 def closure():
