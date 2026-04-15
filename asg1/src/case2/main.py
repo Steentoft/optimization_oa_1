@@ -26,7 +26,7 @@ print("number of training samples: " + str(len(train_dataset)) + "\n" +
 print("datatype of the 1st training sample: ", train_dataset[0][0].type())
 print("size of the 1st training sample: ", train_dataset[0][0].size())
 
-batch_size = 64
+batch_size = 258
 
 # Create data loaders.
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
@@ -87,22 +87,33 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
+optimizer_name = "LBFGSlr0,006StrongWolfeBatchSize258"
+criterion_name = "CrEntLoss" 
+
+def closure():
+    optimizer.zero_grad()
+    closure_output = model(images)
+    closure_loss = criterion(closure_output, labels)
+    closure_loss.backward()
+    return closure_loss
+
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.LBFGS(model.parameters(), lr=0.006,line_search_fn='strong_wolfe')
 n_epochs = 10
 train_losses = []
 test_losses = []
+test_accuracies = []
 
 step = 0
 for epoch in range(n_epochs):
     model.train()
     for i, (images, labels) in enumerate(train_loader):
         images, labels = images.to(device), labels.to(device)
-        optimizer.zero_grad()
-        output = model(images)
-        loss = criterion(output, labels)
-        loss.backward()
-        optimizer.step()
+        # optimizer.zero_grad()
+        # output = model(images)
+        # loss = criterion(output, labels)
+        # backward_loss = loss.backward()
+        loss = optimizer.step(closure=closure)
         step += 1
         train_losses.append((step, loss.item()))
 
@@ -118,18 +129,22 @@ for epoch in range(n_epochs):
             correct += pred.eq(labels).sum()
 
     test_loss /= len(test_loader.dataset)
+    test_accuracy = 100. * correct / len(test_loader.dataset)
 
-    print(f'Epoch {epoch} Loss{test_loss}')
+    print(f'Epoch {epoch} Loss {test_loss}')
 
     test_losses.append((step, test_loss))
+    test_accuracies.append((step, test_accuracy))
     print(f'Test set: Average loss: {test_loss}, \
-        Accuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset)}%)')
+        Accuracy: {correct}/{len(test_loader.dataset)} ({test_accuracy}%)')
 
 
 
 # plot train and test losses to file loss.png
 train_steps, train_loss = zip(*train_losses)
 test_steps, test_loss = zip(*test_losses)
+test_steps, test_accuracy = zip(*test_accuracies)
+
 
 fig, ax = plt.subplots(2, 1, figsize=(8, 6), sharex=True)  # sharex aligns x-axes
 
@@ -149,7 +164,13 @@ ax[1].set_ylabel("Loss")
 ax[1].legend()
 ax[1].grid(True)
 
+# Plot the Third
+ax[0].plot(test_steps, test_accuracies, label="Test Accuracy", color="green")
+ax[0].set_ylabel("Accuracy (%)")
+ax[0].legend()
+ax[0].grid(True)
+
 # Adjust layout and show the plot
 plt.tight_layout()
 # plt.show()
-plt.savefig('loss2.png')
+plt.savefig(f"{optimizer_name}+{criterion_name}+epoc{n_epochs}")

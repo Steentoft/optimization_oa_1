@@ -1,10 +1,10 @@
 import math
-
 import numpy as np
 import matplotlib.pyplot as plt
 
 import autograd.numpy as an
 from autograd import grad
+import scipy
 
 
 ########## Task 1 ##########
@@ -40,8 +40,8 @@ for j in range(len(obstacles)):
 ########## Task 2 ##########
 
 
-### Path Length
 
+### Path Length
 def f_L(x):
     # For loop version... No bueno
     # sum = 0.0
@@ -146,6 +146,16 @@ ax.set_ylim(-1, 11)
 ax.legend()
 
 plt.show()
+
+
+########## Task 4 ##########
+# Compare to scipy.optimize.minimize()
+
+# scipy_line = np.copy(new_line)
+
+# scipy.optimize.minimize()
+
+
 
 
 
