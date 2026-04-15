@@ -115,7 +115,7 @@ def objective_function(x, lam=1, u=10):
     return objective_value, gradient
 
 
-epochs = 200
+epochs = 1000
 best_line = x_init_line
 best_objective_value, best_gradient_array = objective_function(best_line)
 
@@ -129,36 +129,31 @@ def momentum_step(x,gradient,velocity,lr=0.005,beta=0.9):
     x[1:-1] = x[1:-1] + velocity[1:-1]
     return x, velocity 
 
+best_overall_path = np.copy(x_init_line)
+min_objective_value = np.inf
+
 for e in range(epochs):
-    new_line = np.copy(best_line)
-    
-    new_objective_value, new_gradient_array = objective_function(new_line)    
+    new_objective_value, new_gradient_array = objective_function(best_line,lam=10,u=0.5)    
+
+    if new_objective_value < min_objective_value:
+        min_objective_value = new_objective_value
+        best_overall_path = np.copy(best_line)
 
     best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.02, beta=0.6)
 
-    if e % 10 == 0:
+    if e % 100 == 0:
         print(e)
-        ax.plot(new_line[:, 0], new_line[:, 1], marker='.', label=f"New Path no {e}")
+        print(new_objective_value)
+        ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"New Path no {e}")
 
 
-
-
-ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Best Path")
+ax.plot(best_overall_path[:, 0], best_overall_path[:, 1], marker='.', label="Best Path")
 
 ax.set_xlim(-1, 11)
 ax.set_ylim(-1, 11)
 ax.legend()
 
 plt.show()
-
-
-########## Task 4 ##########
-# Compare to scipy.optimize.minimize()
-
-# scipy_line = np.copy(new_line)
-
-# scipy.optimize.minimize()
-
 
 
 

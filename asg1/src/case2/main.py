@@ -29,7 +29,7 @@ print("size of the 1st training sample: ", train_dataset[0][0].size())
 batch_size = 64
 
 # Create data loaders.
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=len(train_dataset), shuffle=True)
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 # Verify size of batches
@@ -87,35 +87,38 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "LBFGSlr0,006StrongWolfeBatchSize258"
+optimizer_name = "ADAMWlr0,002wd0,006BatchSize64"
 criterion_name = "CrEntLoss" 
 
-def closure():
-    optimizer.zero_grad()
-    closure_output = model(images)
-    closure_loss = criterion(closure_output, labels)
-    closure_loss.backward()
-    return closure_loss
+# def closure():
+#     optimizer.zero_grad()
+#     closure_output = model(images)
+#     closure_loss = criterion(closure_output, labels)
+#     closure_loss.backward()
+#     return closure_loss
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.LBFGS(model.parameters(), lr=0.006,line_search_fn='strong_wolfe')
+optimizer = optim.AdamW(model.parameters(), lr=0.002,weight_decay=0.006)
 n_epochs = 10
 train_losses = []
 test_losses = []
 test_accuracies = []
 
 #### SCHEDULER??
+#### Either ADAMlr0,002 or SGDlr0,02NestMom0,9 is best
+#### ADAMWlr0,002wd0,01 Performing alike maybe a bit better
+#### ADAMWlr0,002wd0,006 SCORED 90 in accuracy as the first YEAH!
 
 step = 0
 for epoch in range(n_epochs):
     model.train()
     for i, (images, labels) in enumerate(train_loader):
         images, labels = images.to(device), labels.to(device)
-        # optimizer.zero_grad()
-        # output = model(images)
-        # loss = criterion(output, labels)
-        # backward_loss = loss.backward()
-        loss = optimizer.step(closure=closure)
+        optimizer.zero_grad()
+        output = model(images)
+        loss = criterion(output, labels)
+        backward_loss = loss.backward()
+        optimizer.step()
         step += 1
         train_losses.append((step, loss.item()))
 
@@ -147,7 +150,7 @@ train_steps, train_loss = zip(*train_losses)
 test_steps, test_loss = zip(*test_losses)
 #test_steps, test_accuracy = zip(*test_accuracies)
 
-fig, ax = plt.subplots(3, 1, figsize=(8, 6), sharex=True)  # sharex aligns x-axes
+fig, ax = plt.subplots(3, 1, figsize=(8, 10), sharex=True)  # sharex aligns x-axes
 
 # Plot the first
 ax[0].plot(train_steps, train_loss, label="Train Loss", color="blue")
@@ -157,10 +160,6 @@ ax[0].grid(True)
 
 # Plot the second
 ax[1].plot(test_steps, test_loss, label="Test Loss, Average", color="red")
-interval = int(np.ceil(len(train_dataset)/batch_size))
-ax[1].set_xticks(range(0,interval*(n_epochs+1),interval))
-ax[1].set_xticklabels(range(n_epochs+1))
-ax[1].set_xlabel("Epoch")
 ax[1].set_ylabel("Loss")
 ax[1].legend()
 ax[1].grid(True)
@@ -168,8 +167,15 @@ ax[1].grid(True)
 # Plot the Third
 ax[2].plot(test_steps, test_accuracies, label="Test Accuracy", color="green")
 ax[2].set_ylabel("Accuracy (%)")
+ax[2].set_xlabel("Epoch")
 ax[2].legend()
 ax[2].grid(True)
+
+steps_per_epoch = len(train_loader)
+tick_positions = [i * steps_per_epoch for i in range(n_epochs + 1)]
+tick_labels = [str(i) for i in range(n_epochs + 1)]
+
+plt.xticks(tick_positions, tick_labels)
 
 # Adjust layout and show the plot
 plt.tight_layout()
