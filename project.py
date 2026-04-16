@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import autograd.numpy as an
-from autograd import grad
+from autograd import grad, hessian
 import scipy
 
 
@@ -105,7 +105,7 @@ def penalty_2(x, obstacles, alpha=1):
 def circular_obstacle(x, obstacle):
     return an.linalg.norm(obstacle[0] - x)
 
-def objective_function(x, lam=1, u=10):
+def objective_function(x, lam=1, u=2):
     # Objective Value
     objective_value = np.sum(f_L(x)+lam*f_S(x)+u*f_O(x))
 
@@ -115,25 +115,21 @@ def objective_function(x, lam=1, u=10):
     return objective_value, gradient
 
 
-epochs = 1000
-best_line = x_init_line
-best_objective_value, best_gradient_array = objective_function(best_line)
-
-ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
+ax.plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
 
 # Momentum
-velocity = np.zeros_like(best_line)
+velocity = np.zeros_like(x_init_line)
 
 def momentum_step(x,gradient,velocity,lr=0.005,beta=0.9):
     velocity = beta * velocity - lr * gradient
     x[1:-1] = x[1:-1] + velocity[1:-1]
     return x, velocity 
 
-v_adam = np.zeros_like(best_line)
-s_adam = np.zeros_like(best_line)
+v_adam = np.zeros_like(x_init_line)
+s_adam = np.zeros_like(x_init_line)
 t = 0
 
-def adamw(x, adam_gradient, v, s, t, lr=0.001, gamma_v=0.9, gamma_s=0.999, epsilon=1e-8, weight_decay=0.01):
+def adamw_step(x, adam_gradient, v, s, t, lr=0.001, gamma_v=0.9, gamma_s=0.999, epsilon=1e-8, weight_decay=0.01):
     t += 1
 
     v = gamma_v * v - (lr * adam_gradient)
@@ -149,27 +145,82 @@ def adamw(x, adam_gradient, v, s, t, lr=0.001, gamma_v=0.9, gamma_s=0.999, epsil
 
     return x, v, s, t
 
-best_overall_path = np.copy(x_init_line)
-min_objective_value = np.inf
+def newton_step(x, lam=1, u=2, epsilon=1e-8, stepsize=0.5, stopcrit=50):
+    x_0 = np.copy(x)
+    step = 1
+    Delta_val = 1.0
+
+    # Objective fnc for flattened array
+    def f_obj(x_flat):
+        x_reshaped = x_flat.reshape(-1,2)
+        full_path = an.vstack([x[0], x_reshaped, x[-1]])
+        return f_L(full_path) + lam * f_S(full_path) + u * f_O(full_path)
+
+    while Delta_val > epsilon and step < stopcrit:
+        x_current = x[1:-1].flatten()
+
+        grad_f = grad(f_obj)(x_current)
+        H = hessian(f_obj)(x_current)
+
+        eigenvalues, eigenvectors = np.linalg.eigh(H)
+        eigenvalues = np.maximum(eigenvalues, epsilon)
+        H_mod = eigenvectors @ np.diag(eigenvalues) @ eigenvectors.T
+
+        Delta_arr = np.linalg.inv(H_mod) @ grad_f
+
+        if stopcrit / step > 0.5:
+            x_current = x_current - stepsize * Delta_arr
+        else:
+            x_current = x_current - Delta_arr
+
+        x[1:-1] = x_current.reshape(-1,2)
+        Delta_val = np.linalg.norm(Delta_arr)
+        print(f"This is iter.: {step} | Obj. Val.: {(f_obj)(x_current)}")
+        step += 1
+    
+    return x
+
+
+epochs = 1000
+best_line = x_init_line
+
+current_mom_path = np.copy(x_init_line)
+current_adamw_path = np.copy(x_init_line)
+current_newton_path = np.copy(x_init_line)
+
+min_mom_objective_value = np.inf
+min_adamw_objective_value = np.inf
+
+best_momentum = np.copy(x_init_line)
+best_adamw = np.copy(x_init_line)
+best_newton = np.copy(x_init_line)
 
 for e in range(epochs):
-    new_objective_value, new_gradient_array = objective_function(best_line,lam=10,u=0.5)    
-
-    if new_objective_value < min_objective_value:
-        min_objective_value = new_objective_value
-        best_overall_path = np.copy(best_line)
-
-    #best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.002, beta=0.6)
-    best_line, v_adam, s_adam, t = adamw(best_line, new_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
+    # Momentum
+    mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=10,u=0.5)    
     
+    if mom_objective_value < min_mom_objective_value:
+        min_mom_objective_value = mom_objective_value
+        best_momentum = np.copy(current_mom_path)
 
-    if e % 100 == 0:
-        print(f"Iteration no.: {e}")
-        print(f"Objective Value: {new_objective_value}")
-        ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"New Path no {e}")
+    current_mom_path, velocity = momentum_step(current_mom_path, mom_gradient_array, velocity, lr=0.002, beta=0.6)
+    
+    # AdamW
+    adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=10,u=0.5)    
 
+    if adamw_objective_value < min_adamw_objective_value:
+        min_adamw_objective_value = adamw_objective_value
+        best_adamw = np.copy(current_adamw_path)
 
-ax.plot(best_overall_path[:, 0], best_overall_path[:, 1], marker='.', label="Best Path")
+    current_adamw_path, v_adam, s_adam, t = adamw_step(current_adamw_path, adamw_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
+
+# Newtons Method
+best_newton = newton_step(current_newton_path,lam=10,u=0.5)
+newton_objective_value, newton_gradient_array = objective_function(best_newton,lam=10,u=0.5)    
+
+ax.plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
+ax.plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
+ax.plot(best_newton[:, 0], best_newton[:, 1], marker='.', label=f"Best Newton Path | Obj. Val. {newton_objective_value:.2f}")
 
 ax.set_xlim(-1, 11)
 ax.set_ylim(-1, 11)
