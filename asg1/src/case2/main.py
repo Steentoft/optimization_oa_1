@@ -87,7 +87,7 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "RMSPROPlr0,002wSTEPlrG0,45step3BatchSize64"
+optimizer_name = "ADAMWlr0,002wd0,01wCosineAnnealingLRtmaxFullEpochBatchSize64"
 criterion_name = "CrEntLoss" 
 
 # def closure():
@@ -98,9 +98,9 @@ criterion_name = "CrEntLoss"
 #     return closure_loss
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.RMSprop(model.parameters(), lr=0.002)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer,gamma=0.45,step_size=3)
+optimizer = optim.AdamW(model.parameters(), lr=0.002,weight_decay=0.01)
 n_epochs = 10
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
 train_losses = []
 test_losses = []
 test_accuracies = []
@@ -109,6 +109,8 @@ test_accuracies = []
 #### Either ADAMlr0,002 or SGDlr0,02NestMom0,9 is best
 #### ADAMWlr0,002wd0,01 Performing alike maybe a bit better
 #### ADAMWlr0,002wd0,006 SCORED 90 in accuracy as the first YEAH!
+#### NADAMlr0,002 is good, and so is RMSPROPlr0,002wSTEPlrG0,5step3
+#### ADAMWlr0,002wd0,006 scoring 90,7 
 
 step = 0
 for epoch in range(n_epochs):

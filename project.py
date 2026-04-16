@@ -23,7 +23,7 @@ obstacles = [
 
 fig, ax = plt.subplots(figsize=(6, 6))
 
-n_points = 75
+n_points = 50
 
 x_init_line = np.linspace(x_start,x_end,n_points)
 
@@ -129,6 +129,26 @@ def momentum_step(x,gradient,velocity,lr=0.005,beta=0.9):
     x[1:-1] = x[1:-1] + velocity[1:-1]
     return x, velocity 
 
+v_adam = np.zeros_like(best_line)
+s_adam = np.zeros_like(best_line)
+t = 0
+
+def adamw(x, adam_gradient, v, s, t, lr=0.001, gamma_v=0.9, gamma_s=0.999, epsilon=1e-8, weight_decay=0.01):
+    t += 1
+
+    v = gamma_v * v - (lr * adam_gradient)
+    s = gamma_s * s + (1 - gamma_s) * (adam_gradient**2)
+
+    v_hat = v / (1 - gamma_v**t)
+    s_hat = s / (1 - gamma_s**t)
+
+    decay = lr * weight_decay * x[1:-1]
+    next_x = (1.0 / (epsilon + an.sqrt(s_hat[1:-1]))) * v_hat[1:-1]
+
+    x[1:-1] = x[1:-1] + next_x - decay
+
+    return x, v, s, t
+
 best_overall_path = np.copy(x_init_line)
 min_objective_value = np.inf
 
@@ -139,11 +159,13 @@ for e in range(epochs):
         min_objective_value = new_objective_value
         best_overall_path = np.copy(best_line)
 
-    best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.02, beta=0.6)
+    #best_line, velocity = momentum_step(best_line, new_gradient_array, velocity, lr=0.002, beta=0.6)
+    best_line, v_adam, s_adam, t = adamw(best_line, new_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
+    
 
     if e % 100 == 0:
-        print(e)
-        print(new_objective_value)
+        print(f"Iteration no.: {e}")
+        print(f"Objective Value: {new_objective_value}")
         ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"New Path no {e}")
 
 
