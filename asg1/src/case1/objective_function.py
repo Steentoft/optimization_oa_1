@@ -1,53 +1,68 @@
-import numpy as np
 import autograd.numpy as an
 from autograd import grad
 
-x_start = np.array([0.0,0.0])
-x_end = np.array ([7.0, 10.0])
-
-n_points = 75
-
-x_init_line = np.linspace(x_start,x_end,n_points)
-
-
+########## Task 2 ##########
+### Path Length
 def f_L(x):
-    sum = 0.0
-    for i in range(len(x)-1):
-        sum += abs(x[i+1]-x[i])**2
-    return an.sum(sum)
-
+    x = x.reshape((-1, 2))
+    differences = x[1:] - x[:-1]
+    return an.sum(differences ** 2)
 
 def gradient_f_L(x):
     return grad(f_L)(x)
 
-
+### Smoothness
 def f_S(x):
-    sum = 0.0
-    for i in range(len(x)-1):
-        sum += abs(x[i+1]-2*x[i]+x[i-1])**2
-    return an.sum(sum)
+    x = x.reshape((-1, 2))
+    differences = x[2:] - 2 * x[1:-1] + x[:-2]
+    return an.sum(differences ** 2)
 
 def gradient_f_S(x):
     return grad(f_S)(x)
 
-    
-def f_O(x):
+### Obstacle Avoidance
+def f_O(x, obstacles):
+    x = x.reshape((-1, 2))
+    # For loop version, should also be vectorized.
     sum = 0.0
-    for i in range(len(x)):
-        sum += penalty_2(x[i])
+    for i in range(1, len(x)-1):
+        sum += penalty_2(x[i], obstacles)
     return an.sum(sum)
 
-def gradient_f_O(x):
-    return grad(f_O)(x)
+def gradient_f_O(x, obstacles):
+    return grad(f_O)(x, obstacles)
 
-print(gradient_f_O(x_init_line))
+### Penalties
+def penalty_1(x, obstacles):
+    penalty = 0.0
+    for i in range(len(obstacles)):
+        if an.linalg.norm(circular_obstacle(x, [obstacles[i]]) > obstacles[i][1]):
+            penalty += 1/(circular_obstacle(x,[obstacles[i]])-obstacles[i][1])**2
+        else:
+            penalty += 999999
+    return penalty
 
 def penalty_2(x, obstacles, alpha=1):
     penalty = 0.0
     for i in range(len(obstacles)):
-        penalty += an.exp(-alpha*(circular_obstacle(x, obstacles[i])**2-obstacles[i][1]**2))
+        penalty += an.exp(-alpha * (circular_obstacle(x, obstacles[i]) ** 2 - obstacles[i][1] ** 2))
     return penalty
 
 def circular_obstacle(x, obstacle):
-    return abs(x-obstacle[0])
+    return an.linalg.norm(obstacle[0] - x)
 
+def objective_function(x, x_init_line, obstacles, lam=3, u=15):
+    flat_x = x_init_line.copy()
+    flat_x[1:-1] = x.reshape((-1, 2))
+
+    x = flat_x.flatten()
+
+    # Objective Value
+    objective_value = an.sum(f_L(x) + lam * f_S(x) + u * f_O(x, obstacles))
+
+    # Gradient
+    gradient = gradient_f_L(x) + lam * gradient_f_S(x) + u * gradient_f_O(x, obstacles)
+    gradient_full = gradient.reshape((-1, 2))
+    gradient_interior = gradient_full[1:-1].flatten()
+
+    return objective_value, gradient_interior
