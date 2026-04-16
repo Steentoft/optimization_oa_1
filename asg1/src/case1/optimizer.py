@@ -34,15 +34,8 @@ for j in range(len(obstacles)):
 ### Path Length
 
 def f_L(x):
-    # For loop version... No bueno
-     #sum = 0.0
-     #for i in range(1, len(x)-2):
-     #    sum += abs(x[i + 1] - x[i]) ** 2
-         #sum += abs(x[i]-x[i+2]+x[i+1]-x[i+3])**2
-     #return an.sum(sum)
-
-    pts = x.reshape((-1, 2))
-    differences = pts[1:] - pts[:-1]
+    x = x.reshape((-1, 2))
+    differences = x[1:] - x[:-1]
     return an.sum(differences ** 2)
 
 
@@ -102,17 +95,17 @@ def circular_obstacle(x, obstacle):
     return an.linalg.norm(obstacle[0] - x)
 
 
-def objective_function(x, lam=3, u=15):
+def objective_function(x, len=20, lam=3, u=15):
     flat_x = x_init_line.copy()
     flat_x[1:-1] = x.reshape((-1, 2))
 
     x = flat_x.flatten()
 
     # Objective Value
-    objective_value = an.sum(f_L(x) + lam * f_S(x) + u * f_O(x))
+    objective_value = len * an.sum(f_L(x) + lam * f_S(x) + u * f_O(x))
 
     # Gradient
-    gradient = gradient_f_L(x) + lam * gradient_f_S(x) + u * gradient_f_O(x)
+    gradient = len * gradient_f_L(x) + lam * gradient_f_S(x) + u * gradient_f_O(x)
 
     gradient_full = gradient.reshape((-1, 2))
 
@@ -122,24 +115,43 @@ def objective_function(x, lam=3, u=15):
 
 inner_x_init = x_init_line[1:-1].flatten()
 
-res = minimize(objective_function, inner_x_init, method='CG', tol=0.001, jac=True, options={'maxiter': 300})
-
+res = minimize(objective_function, inner_x_init, method='CG', tol=0.001, jac=True, options={'maxiter': 100})
 minimize_line = np.reshape(res.x, (-1, 2))
 
 rebuilt_x = x_init_line.copy()
-print(rebuilt_x[1:-1].shape)
-print(minimize_line.shape)
 
 rebuilt_x[1:-1] = minimize_line.reshape((-1, 2))
 
-ax.plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label="Optimizer")
+ax.plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer {res.fun}]")
 
-ax.plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
+best_line = x_init_line.copy()
+ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label="Initial Path")
 
+best_inner_line = x_init_line.copy()[1:-1].flatten()
+inner_new_line = np.copy(best_inner_line)
+
+epochs = 100
+learning_rate = 0.001
+
+### Gradient Descent ###
+for e in range(epochs):
+    inner_new_line = best_inner_line
+
+    new_objective_value, new_gradient_array = objective_function(inner_new_line)
+
+    for j in range(len(inner_new_line)):
+        inner_new_line[j] = (inner_new_line[j] - (learning_rate * new_gradient_array[j])) #Update step
+
+    #if objective_function(inner_new_line)[0] > objective_function(best_inner_line)[0]:
+    best_inner_line = inner_new_line
+
+
+best_inner_line = best_inner_line.reshape((-1, 2))
+
+ax.plot(best_inner_line[:, 0], best_inner_line[:, 1], marker='.', label="Best Path")
 
 ax.set_xlim(-0.5, 11)
 ax.set_ylim(-0.5, 11)
 ax.legend()
 
 plt.show()
-
