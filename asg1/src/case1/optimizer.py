@@ -102,7 +102,7 @@ def circular_obstacle(x, obstacle):
     return an.linalg.norm(obstacle[0] - x)
 
 
-def objective_function(x, lam=3, u=15):
+def objective_function(x, lam=5, u=1):
     flat_x = x_init_line.copy()
     flat_x[1:-1] = x.reshape((-1, 2))
 

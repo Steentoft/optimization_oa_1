@@ -87,7 +87,7 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "ADAMWlr0,002wd0,006BatchSize64"
+optimizer_name = "RMSPROPlr0,002wSTEPlrG0,45step3BatchSize64"
 criterion_name = "CrEntLoss" 
 
 # def closure():
@@ -98,7 +98,8 @@ criterion_name = "CrEntLoss"
 #     return closure_loss
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.AdamW(model.parameters(), lr=0.002,weight_decay=0.006)
+optimizer = optim.RMSprop(model.parameters(), lr=0.002)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer,gamma=0.45,step_size=3)
 n_epochs = 10
 train_losses = []
 test_losses = []
@@ -135,6 +136,9 @@ for epoch in range(n_epochs):
 
     test_loss /= len(test_loader.dataset)
     test_accuracy = 100. * correct / len(test_loader.dataset)
+
+    scheduler.step()
+    current_lr = optimizer.param_groups[0]['lr']
 
     print(f'Epoch {epoch} Loss {test_loss}')
 
