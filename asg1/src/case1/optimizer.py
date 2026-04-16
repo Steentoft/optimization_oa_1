@@ -1,8 +1,5 @@
-import math
-
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.ma.core import reshape
 from scipy.optimize import minimize
 
 import autograd.numpy as an
@@ -27,10 +24,7 @@ x_init_line = np.linspace(x_start, x_end, n_points)
 for j in range(len(obstacles)):
     ax.add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
 
-
 ########## Task 2 ##########
-
-
 ### Path Length
 
 def f_L(x):
@@ -38,27 +32,17 @@ def f_L(x):
     differences = x[1:] - x[:-1]
     return an.sum(differences ** 2)
 
-
 def gradient_f_L(x):
     return grad(f_L)(x)
 
-
 ### Smoothness
 def f_S(x):
-    # For loop version
-    #sum = 0.0
-    #for i in range(1,len(x)-1):
-    #    sum += abs(x[i+1]-2*x[i]+x[i-1])**2
-    #return an.sum(sum)
-
     x = x.reshape((-1, 2))
     differences = x[2:] - 2 * x[1:-1] + x[:-2]
     return an.sum(differences ** 2)
 
-
 def gradient_f_S(x):
     return grad(f_S)(x)
-
 
 ### Obstacle Avoidance
 def f_O(x):
@@ -68,7 +52,6 @@ def f_O(x):
     for i in range(1, len(x)-1):
         sum += penalty_2(x[i], obstacles)
     return an.sum(sum)
-
 
 def gradient_f_O(x):
     return grad(f_O)(x)
@@ -90,25 +73,21 @@ def penalty_2(x, obstacles, alpha=1):
         penalty += an.exp(-alpha * (circular_obstacle(x, obstacles[i]) ** 2 - obstacles[i][1] ** 2))
     return penalty
 
-
 def circular_obstacle(x, obstacle):
     return an.linalg.norm(obstacle[0] - x)
 
-
-def objective_function(x, len=20, lam=3, u=15):
+def objective_function(x, lam=3, u=15):
     flat_x = x_init_line.copy()
     flat_x[1:-1] = x.reshape((-1, 2))
 
     x = flat_x.flatten()
 
     # Objective Value
-    objective_value = len * an.sum(f_L(x) + lam * f_S(x) + u * f_O(x))
+    objective_value = an.sum(f_L(x) + lam * f_S(x) + u * f_O(x))
 
     # Gradient
-    gradient = len * gradient_f_L(x) + lam * gradient_f_S(x) + u * gradient_f_O(x)
-
+    gradient = gradient_f_L(x) + lam * gradient_f_S(x) + u * gradient_f_O(x)
     gradient_full = gradient.reshape((-1, 2))
-
     gradient_interior = gradient_full[1:-1].flatten()
 
     return objective_value, gradient_interior
@@ -119,9 +98,7 @@ res = minimize(objective_function, inner_x_init, method='CG', tol=0.001, jac=Tru
 minimize_line = np.reshape(res.x, (-1, 2))
 
 rebuilt_x = x_init_line.copy()
-
 rebuilt_x[1:-1] = minimize_line.reshape((-1, 2))
-
 ax.plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer {res.fun}]")
 
 best_line = x_init_line.copy()
@@ -142,13 +119,12 @@ for e in range(epochs):
     for j in range(len(inner_new_line)):
         inner_new_line[j] = (inner_new_line[j] - (learning_rate * new_gradient_array[j])) #Update step
 
-    #if objective_function(inner_new_line)[0] > objective_function(best_inner_line)[0]:
-    best_inner_line = inner_new_line
-
+    if objective_function(inner_new_line)[0] < objective_function(best_inner_line)[0]:
+        best_inner_line = inner_new_line
 
 best_inner_line = best_inner_line.reshape((-1, 2))
 
-ax.plot(best_inner_line[:, 0], best_inner_line[:, 1], marker='.', label="Best Path")
+ax.plot(best_inner_line[:, 0], best_inner_line[:, 1], marker='.', label=f"Best Path {objective_function(best_inner_line.flatten())[0]}")
 
 ax.set_xlim(-0.5, 11)
 ax.set_ylim(-0.5, 11)
