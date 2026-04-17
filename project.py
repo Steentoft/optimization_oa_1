@@ -77,7 +77,7 @@ def f_O(x):
     # For loop version, should also be vectorized.
     sum = 0.0
     for i in range(len(x)):
-        sum += penalty_2(x[i],obstacles)
+        sum += penalty_1(x[i],obstacles)
     return an.sum(sum)
 
 
@@ -168,7 +168,7 @@ def newton_step(x, lam=1, u=2, epsilon=1e-8, stepsize=0.5, stopcrit=50):
 
         Delta_arr = np.linalg.inv(H_mod) @ grad_f
 
-        if stopcrit / step > 0.5:
+        if stopcrit / step > 0.75:
             x_current = x_current - stepsize * Delta_arr
         else:
             x_current = x_current - Delta_arr
@@ -195,45 +195,38 @@ best_momentum = np.copy(x_init_line)
 best_adamw = np.copy(x_init_line)
 best_newton = np.copy(x_init_line)
 
-for e in range(epochs):
-    # Momentum
-    mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=10,u=0.5)    
+# for e in range(epochs):
+#     # Momentum
+#     mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=10,u=0.5)    
     
-    if mom_objective_value < min_mom_objective_value:
-        min_mom_objective_value = mom_objective_value
-        best_momentum = np.copy(current_mom_path)
+#     if mom_objective_value < min_mom_objective_value:
+#         min_mom_objective_value = mom_objective_value
+#         best_momentum = np.copy(current_mom_path)
 
-    current_mom_path, velocity = momentum_step(current_mom_path, mom_gradient_array, velocity, lr=0.002, beta=0.6)
+#     current_mom_path, velocity = momentum_step(current_mom_path, mom_gradient_array, velocity, lr=0.002, beta=0.6)
     
-    # AdamW
-    adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=10,u=0.5)    
+#     # AdamW
+#     adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=10,u=0.5)    
 
-    if adamw_objective_value < min_adamw_objective_value:
-        min_adamw_objective_value = adamw_objective_value
-        best_adamw = np.copy(current_adamw_path)
+#     if adamw_objective_value < min_adamw_objective_value:
+#         min_adamw_objective_value = adamw_objective_value
+#         best_adamw = np.copy(current_adamw_path)
 
-    current_adamw_path, v_adam, s_adam, t = adamw_step(current_adamw_path, adamw_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
+#     current_adamw_path, v_adam, s_adam, t = adamw_step(current_adamw_path, adamw_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
 
 # Newtons Method
-best_newton = newton_step(current_newton_path,lam=10,u=0.5)
-newton_objective_value, newton_gradient_array = objective_function(best_newton,lam=10,u=0.5)    
+best_newton = newton_step(current_newton_path,lam=1000,u=0.5,stopcrit=100)
+newton_objective_value, newton_gradient_array = objective_function(best_newton,lam=1000,u=0.5)    
 
-ax.plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
-ax.plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
+# ax.plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
+# ax.plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
 ax.plot(best_newton[:, 0], best_newton[:, 1], marker='.', label=f"Best Newton Path | Obj. Val. {newton_objective_value:.2f}")
 
 ax.set_xlim(-1, 11)
 ax.set_ylim(-1, 11)
 ax.legend()
 
+plt.xlabel(f"N_points: {n_points} | λ: 10 | μ: 0.5 | Obj. Val.: {newton_objective_value:.2f}")
 plt.show()
 
 
-
-
-# Adding something to penalize big spacing between points. Potentially recreating the line
-# points so they are equally spread?
-
-# Path length doesn't work, but maybe a longest distance between two points should be a objective value as well.
-
-# For case 2, think of doing homemade optimizers.
