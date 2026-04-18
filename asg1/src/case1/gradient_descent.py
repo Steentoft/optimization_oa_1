@@ -9,11 +9,11 @@ def gradient_descent(x, fun, args):
 
     for iteration in range(iterations):
 
-        new_objective_value, new_gradient_array = fun(best_line)
+        gradient = fun(best_line)[1]
 
         for j in range(2, len(best_line) - 2):
-            best_line[j] = (best_line[j] - (learning_rate * new_gradient_array[j]))
+            best_line[j] = (best_line[j] - (learning_rate * gradient[j]))
 
-        convergence_points.append((iteration,fun(best_line)[0]))
+        convergence_points.append((iteration, fun(best_line)[0]))
 
     return best_line, convergence_points

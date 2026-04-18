@@ -16,7 +16,7 @@ def newtonsmethod(x, fun, args):
     while Delta_val > epsilon and step < stopcrit:
         x_current = this_x[1:-1].flatten()
 
-        objective_value, grad_f = fun(x_current)
+        grad_f = fun(x_current)[1]
 
         H = H_func(x_current)
 
