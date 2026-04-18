@@ -12,14 +12,14 @@ def momentum(x,fun,args):
     for i in range(iterations):
         this_x = np.copy(best_line)
 
-        objective_value, gradient = fun(this_x)
+        gradient = fun(this_x)[1]
+
         velocity = beta * velocity - lr * gradient
         best_line[2:-2] = best_line[2:-2] + velocity[2:-2]
 
-
         #print(f"Momentum | Obj. Val.: {fun(this_x)[0]:.2f}")
 
-        convergence_points.append((i,fun(best_line)[0]))
+        convergence_points.append((i, fun(best_line)[0]))
 
 
     return best_line, convergence_points
