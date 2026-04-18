@@ -43,9 +43,9 @@ obj_fun = lambda x: objective_function(x, obstacles, lam, u)
 obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
 
 functions = [
-    { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
-    { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
-    { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
+    #{ "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
+    #{ "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
+    #{ "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
     { "func" : newtonsmethod, "name" : "Newton's Method",  "args" : [iterations, 1e-8, 0.5]}
 ]
 
