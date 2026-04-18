@@ -149,7 +149,6 @@ def adamw_step(x, adam_gradient, v, s, t, lr=0.001, gamma_v=0.9, gamma_s=0.999, 
     return x, v, s, t
 
 def newton_step(x, lam=1, u=2, epsilon=1e-8, stepsize=0.5, stopcrit=50):
-    x_0 = np.copy(x)
     step = 1
     Delta_val = 1.0
 
@@ -162,8 +161,11 @@ def newton_step(x, lam=1, u=2, epsilon=1e-8, stepsize=0.5, stopcrit=50):
     while Delta_val > epsilon and step < stopcrit:
         x_current = x[1:-1].flatten()
 
+
         grad_f = grad(f_obj)(x_current)
         H = hessian(f_obj)(x_current)
+
+        print(H)
 
         eigenvalues, eigenvectors = np.linalg.eigh(H)
         eigenvalues = np.maximum(eigenvalues, epsilon)
@@ -178,7 +180,7 @@ def newton_step(x, lam=1, u=2, epsilon=1e-8, stepsize=0.5, stopcrit=50):
 
         x[1:-1] = x_current.reshape(-1,2)
         Delta_val = np.linalg.norm(Delta_arr)
-        print(f"This is iter.: {step} | Obj. Val.: {(f_obj)(x_current)} | DeltaNorm: {Delta_val:.8f}")
+       #print(f"This is iter.: {step} | Obj. Val.: {(f_obj)(x_current)} | DeltaNorm: {Delta_val:.8f}")
         conv_points.append((step, (f_obj)(x_current)))
         step += 1
     
