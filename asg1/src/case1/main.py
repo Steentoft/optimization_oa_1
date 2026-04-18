@@ -7,6 +7,7 @@ from optimizer import CG_optimizer
 
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 ########## Task 1 ##########
 x_start = np.array([0.0, 0.0])
@@ -57,12 +58,13 @@ def main():
 
     for function in functions:
         print("Running function: ", function["name"])
+        start_time = time.time()
         best_line, convergence_points = function["func"](x_init_line, obj_fun, function["args"])
 
         best_line = best_line.reshape((-1, 2))
 
         conv_steps, objective_val_point = zip(*convergence_points)
-        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]} | Final Obj. Val.: {objective_val_point[-1]:.2f}")
+        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]} | Final Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
         ax[1].plot(conv_steps,objective_val_point, marker='.', label=f"{function['name']} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
 
 
