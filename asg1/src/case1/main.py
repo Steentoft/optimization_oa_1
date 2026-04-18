@@ -44,9 +44,9 @@ obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
 
 functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
-    { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
-    { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
-    { "func" : newtonsmethod, "name" : "Newtons Method",  "args" : [iterations, 1e-8, 0.5]}
+    { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.01, 0.9]},
+    { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.01, 0.9, 0.999, 1e-8, 0.01]},
+    #{ "func" : newtonsmethod, "name" : "Newtons Method",  "args" : [iterations, 1e-8, 0.5]}
 ]
 
 optimizers = [
@@ -56,11 +56,12 @@ optimizers = [
 def main():
 
     for function in functions:
+        print("Running function: ", function["name"])
         best_line, convergence_points = function["func"](x_init_line, obj_fun, function["args"])
 
         best_line = best_line.reshape((-1, 2))
 
-        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]}")
+        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]} - {convergence_points[-1]:.2f}")
 
         ax[1].plot(range(iterations), convergence_points, marker='.', label=f"{function['name']}")
 
@@ -75,13 +76,17 @@ def main():
             convergence_points.append(res.fun)
 
         rebuilt_x = plot_inner_flat_line(res.x)
-        ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path")
+        ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path - {convergence_points[-1]:.2f}")
         ax[1].plot(range(iterations), convergence_points, marker='.', label=f"Optimizer")
 
 
     ax[0].set_xlim(-0.5, 11)
     ax[0].set_ylim(-0.5, 11)
     ax[0].legend()
+
+
+    ax[1].set_xlabel("Iterations")
+    ax[1].set_ylabel("Objective Value")
     ax[1].legend()
     ax[1].grid()
 
