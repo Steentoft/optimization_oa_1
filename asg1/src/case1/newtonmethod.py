@@ -10,21 +10,26 @@ def newtonsmethod(x, fun, args):
 
     convergence_points = []
     stopcrit, epsilon, stepsize = args[0], args[1], args[2]
-    obj_val_only = lambda x_val: fun(x_val)[0]
-    H_func = hessian(obj_val_only)
+    
+    def f_obj(x_flat):
+        x_reshaped = x_flat.reshape(-1,2)
+        full_path = an.vstack([x[0], x_reshaped, x[-1]])
+        return fun(full_path)[0]
+
+    grad_func = grad(f_obj)
+    H_func = hessian(f_obj)
 
     while Delta_val > epsilon and step < stopcrit:
         x_current = this_x[1:-1].flatten()
-
-        objective_value, grad_f = fun(x_current)
-
+        
+        grad_f = grad_func(x_current)
         H = H_func(x_current)
-
+        
         eigenvalues, eigenvectors = np.linalg.eigh(H)
         eigenvalues = np.maximum(eigenvalues, epsilon)
         H_mod = eigenvectors @ np.diag(eigenvalues) @ eigenvectors.T
 
-        Delta_arr = np.linalg.inv(H_mod) @ grad_f
+        Delta_arr = np.linalg.solve(H_mod, grad_f)
 
         if stopcrit / step > 0.50:
             x_current = x_current - stepsize * Delta_arr
@@ -33,6 +38,7 @@ def newtonsmethod(x, fun, args):
 
         this_x[1:-1] = x_current.reshape(-1,2)
         Delta_val = np.linalg.norm(Delta_arr)
+        #print(f"This is iter.: {step} | Obj. Val.: {fun(this_x)[0]} | DeltaNorm: {Delta_val:.8f}")
         convergence_points.append((step,fun(x_current)[0]))
         step += 1
 
