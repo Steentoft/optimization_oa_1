@@ -19,25 +19,27 @@ obstacles = [
     (np.array([4, 8]), 1.0, 'orange')
 ]
 
-n_points = 25
+n_points = 100
 lam = 1
 u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
-iterations = 50
+iterations = 100
 
 obj_fun = lambda x: objective_function(x, obstacles, lam, u)
 obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
 
 ### Plotting
 fig, ax = plt.subplots(2,2, figsize=(12, 12))
-ax[0][0].plot(x_init_line[:, 0], x_init_line[:, 1], 'blue', marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
-ax[1][0].plot(x_init_line[:, 0], x_init_line[:, 1], 'blue', marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
 
 for j in range(len(obstacles)):
     ax[0][0].add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
     ax[1][0].add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
+
+ax[0][0].plot(x_init_line[:, 0], x_init_line[:, 1], 'purple', marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
+ax[1][0].plot(x_init_line[:, 0], x_init_line[:, 1], 'purple', marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
+
 
 def plot_inner_flat_line(x):
     new_line = x_init_line.copy()
@@ -54,9 +56,9 @@ functions = [
 ]
 
 optimizers = [
-    { "func" : CG_optimizer, "name" : "CG-OPT", "color" : "red"},
-    { "func" : BFGS_optimizer, "name": "BFGS-OPT", "color": "red"},
-    { "func" : Nelder_mead_optimizer, "name": "Nelder-Mead-OPT", "color": "red"},
+    { "func" : CG_optimizer, "name" : "CG-OPT", "col" : "goldenrod"},
+    { "func" : BFGS_optimizer, "name": "BFGS-OPT", "col": "aqua"},
+    { "func" : Nelder_mead_optimizer, "name": "Nelder-Mead-OPT", "col": "lime"},
 ]
 
 def main():
@@ -88,8 +90,8 @@ def main():
 
         rebuilt_x = plot_inner_flat_line(res.x)
         conv_steps, objective_val_point = zip(*convergence_points)
-        ax[1][0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"{optimizer["name"]} | Final Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
-        ax[1][1].plot(conv_steps,objective_val_point, marker='.', label=f"{optimizer["name"]} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
+        ax[1][0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', color=optimizer["col"], label=f"{optimizer["name"]} | Final Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
+        ax[1][1].plot(conv_steps,objective_val_point, marker='.', color=optimizer["col"], label=f"{optimizer["name"]} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
 
     ax[0][0].set_xlim(-0.5, 11)
     ax[0][0].set_ylim(-0.5, 11)
@@ -114,7 +116,7 @@ def main():
     ax[1][1].grid()
 
     plt.suptitle(f"N_points: {n_points} | λ: {lam} | μ: {u} |")
-    #plt.savefig(f"asg1/src/case1/plots/Npoint{n_points}Lam{lam}Mu{u}Obs-2hit1")
+    plt.savefig(f"asg1/src/case1/plots/Npoint{n_points}Lam{lam}Mu{u}Obs-2hit1")
     plt.show()
 
 if __name__=="__main__":
