@@ -6,6 +6,7 @@ import autograd.numpy as an
 def newtonsmethod(x, fun, args):
     step = 1
     Delta_val = 1.0
+    this_x = np.copy(x)
 
     convergence_points = []
     stopcrit, epsilon, stepsize = args[0], args[1], args[2]
@@ -13,7 +14,7 @@ def newtonsmethod(x, fun, args):
     H_func = hessian(obj_val_only)
 
     while Delta_val > epsilon and step < stopcrit:
-        x_current = x[1:-1].flatten()
+        x_current = this_x[1:-1].flatten()
 
         objective_value, grad_f = fun(x_current)
 
@@ -30,9 +31,9 @@ def newtonsmethod(x, fun, args):
         else:
             x_current = x_current - Delta_arr
 
-        x[1:-1] = x_current.reshape(-1,2)
+        this_x[1:-1] = x_current.reshape(-1,2)
         Delta_val = np.linalg.norm(Delta_arr)
         convergence_points.append((step,fun(x_current)[0]))
         step += 1
 
-    return x, convergence_points
+    return this_x, convergence_points
