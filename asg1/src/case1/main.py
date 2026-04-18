@@ -27,9 +27,12 @@ x_init_line = np.linspace(x_start, x_end, n_points)
 
 iterations = 120
 
+obj_fun = lambda x: objective_function(x, obstacles, lam, u)
+obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
+
 ### Plotting
 fig, ax = plt.subplots(1,2, figsize=(12, 6))
-ax[0].plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
+ax[0].plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
 
 for j in range(len(obstacles)):
     ax[0].add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
@@ -40,8 +43,6 @@ def plot_inner_flat_line(x):
     new_line[1:-1] = x
     return new_line
 
-obj_fun = lambda x: objective_function(x, obstacles, lam, u)
-obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
 
 functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
@@ -64,12 +65,14 @@ def main():
         best_line = best_line.reshape((-1, 2))
 
         conv_steps, objective_val_point = zip(*convergence_points)
-        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]} | Final Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
+        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]} | Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
         ax[1].plot(conv_steps,objective_val_point, marker='.', label=f"{function['name']} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
 
 
     for optimizer in optimizers:
         new_line = x_init_line[1:-1].flatten()
+
+        start_time = time.time()
 
         convergence_points = []
         for iteration in range(iterations):
@@ -79,7 +82,7 @@ def main():
 
         rebuilt_x = plot_inner_flat_line(res.x)
         conv_steps, objective_val_point = zip(*convergence_points)
-        ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path | Final Obj. Val.: {objective_val_point[-1]:.2f}")
+        ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path | Final Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
         ax[1].plot(conv_steps,objective_val_point, marker='.', label=f"Optimizer | Init. Obj. Val.: {objective_val_point[0]:.2f}")
 
 
@@ -93,6 +96,7 @@ def main():
     ax[1].legend(fontsize=7)
     ax[1].grid()
 
+    plt.title(f"N_points: {n_points} | λ: {lam} | μ: {u} |")
     plt.show()
 
 if __name__=="__main__":
