@@ -1,5 +1,3 @@
-from networkx.algorithms.bipartite.basic import color
-
 from objective_function import objective_function, objective_function_op
 from gradient_descent import gradient_descent
 from momentum import momentum
@@ -21,7 +19,7 @@ obstacles = [
     (np.array([4, 8]), 1.0, 'orange')
 ]
 
-n_points = 25
+n_points = 50
 lam = 1
 u = 1
 
@@ -34,7 +32,7 @@ obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
 
 ### Plotting
 fig, ax = plt.subplots(1,2, figsize=(12, 6))
-ax[0].plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
+ax[0].plot(x_init_line[:, 0], x_init_line[:, 1], 'blue', marker='.', label=f"Initial Path | Obj. Val.: {obj_fun(x_init_line)[0]:.2f}")
 
 for j in range(len(obstacles)):
     ax[0].add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
@@ -47,10 +45,10 @@ def plot_inner_flat_line(x):
 
 
 functions = [
-    { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
-    { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.01, 0.9]},
-    { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.01, 0.9, 0.999, 1e-8, 0.01]},
-    { "func" : newtonsmethod, "name" : "Newton's Method",  "args" : [iterations, 1e-8, 0.5]}
+    { "func" : gradient_descent, "name" : "Gradient Descent", "col" : 'red', "args" : [iterations, 0.01]},
+    { "func" : momentum, "name" : "Momentum", "col" : 'green', "args" : [iterations, 0.005, 0.9]},
+    { "func" : adamw, "name" : "AdamW", "col" : 'orange', "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
+    { "func" : newtonsmethod, "name" : "Newton's Method", "col" : 'pink', "args" : [iterations, 1e-8, 0.5]}
 ]
 
 optimizers = [
@@ -71,8 +69,8 @@ def main():
         best_line = best_line.reshape((-1, 2))
 
         conv_steps, objective_val_point = zip(*convergence_points)
-        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]} | Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
-        ax[1].plot(conv_steps,objective_val_point, marker='.', label=f"{function['name']} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
+        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', color=function["col"], label=f"{function["name"]} | Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
+        ax[1].plot(conv_steps,objective_val_point, marker='.', color=function["col"], label=f"{function['name']} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
 
 
     for optimizer in optimizers:
@@ -104,7 +102,8 @@ def main():
     ax[1].legend(fontsize=7)
     ax[1].grid()
 
-    plt.title(f"N_points: {n_points} | λ: {lam} | μ: {u} |")
+    plt.suptitle(f"N_points: {n_points} | λ: {lam} | μ: {u} |")
+    plt.savefig(f"asg1/src/case1/plots/Npoint{n_points}Lam{lam}Mu{u}Obs-2hit1")
     plt.show()
 
 if __name__=="__main__":
