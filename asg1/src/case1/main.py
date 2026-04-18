@@ -14,16 +14,16 @@ x_end = np.array([7.0, 10.0])
 # (Point, Radius, Color)
 obstacles = [
     (np.array([2, 4]), 1.3, 'blue'),
-    (np.array([5, 7]), 1.0, 'orange')
+    (np.array([4, 8]), 1.0, 'orange')
 ]
 
-n_points = 50
+n_points = 25
 lam = 1
 u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
-iterations = 100
+iterations = 300
 
 ### Plotting
 fig, ax = plt.subplots(figsize=(6, 6))
@@ -58,7 +58,7 @@ def main():
 
         best_line = best_line.reshape((-1, 2))
 
-        ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"Best Path from {function["name"]}")
+        ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]}")
 
     for optimizer in optimizers:
         new_line = x_init_line[1:-1].flatten()
