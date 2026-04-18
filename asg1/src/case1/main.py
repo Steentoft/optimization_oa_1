@@ -38,8 +38,8 @@ def plot_inner_flat_line(x):
     new_line[1:-1] = x
     return new_line
 
-obj_fun = lambda x: objective_function(x, obstacles)
-obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles)
+obj_fun = lambda x: objective_function(x, obstacles, lam, u)
+obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
 
 functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
