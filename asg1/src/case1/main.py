@@ -2,6 +2,7 @@ from objective_function import objective_function, objective_function_op
 from gradient_descent import gradient_descent
 from momentum import momentum
 from adamw import adamw
+from newtonmethod import newtonsmethod
 from optimizer import CG_optimizer
 
 import matplotlib.pyplot as plt
@@ -22,6 +23,13 @@ lam = 1
 u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
+
+# Add some noise to the init line to make sure it doesn't get a stuck gradient
+noise = np.random.normal(0,0.001,size=x_init_line.shape)
+noise[0] = [0.0,0.0]
+noise[-1] = [0.0,0.0]
+
+x_init_line += noise
 
 iterations = 100
 
@@ -45,6 +53,7 @@ functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
     { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
     { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
+    #{ "func" : newtonsmethod, "name" : "Newtons Method",  "args" : [iterations, 1, 2, 1e-8, 0.5]},
 ]
 
 optimizers = [
