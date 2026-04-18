@@ -51,7 +51,7 @@ def penalty_2(x, obstacles, alpha=1):
 def circular_obstacle(x, obstacle):
     return an.linalg.norm(obstacle[0] - x)
 
-def objective_function(x, x_init_line, obstacles, lam=3, u=15):
+def objective_function_op(x, x_init_line, obstacles, lam=3, u=15):
     flat_x = x_init_line.copy()
     flat_x[1:-1] = x.reshape((-1, 2))
 
@@ -66,3 +66,12 @@ def objective_function(x, x_init_line, obstacles, lam=3, u=15):
     gradient_interior = gradient_full[1:-1].flatten()
 
     return objective_value, gradient_interior
+
+def objective_function(x, obstacles, lam=3, u=15):
+    # Objective Value
+    objective_value = an.sum(f_L(x) + lam * f_S(x) + u * f_O(x, obstacles))
+
+    # Gradient
+    gradient = gradient_f_L(x) + lam * gradient_f_S(x) + u * gradient_f_O(x, obstacles)
+
+    return objective_value, gradient
