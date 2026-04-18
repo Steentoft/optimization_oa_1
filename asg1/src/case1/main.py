@@ -1,9 +1,11 @@
+from networkx.algorithms.bipartite.basic import color
+
 from objective_function import objective_function, objective_function_op
 from gradient_descent import gradient_descent
 from momentum import momentum
 from adamw import adamw
 from newtonmethod import newtonsmethod
-from optimizer import CG_optimizer
+from optimizer import *
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +27,7 @@ u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
-iterations = 120
+iterations = 25
 
 obj_fun = lambda x: objective_function(x, obstacles, lam, u)
 obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles, lam, u)
@@ -46,13 +48,17 @@ def plot_inner_flat_line(x):
 
 functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
-    { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
-    { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
+    { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.01, 0.9]},
+    { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.01, 0.9, 0.999, 1e-8, 0.01]},
     { "func" : newtonsmethod, "name" : "Newton's Method",  "args" : [iterations, 1e-8, 0.5]}
 ]
 
 optimizers = [
-    CG_optimizer
+    { "func" : CG_optimizer, "name" : "CG-OPT", "color" : "red"},
+    { "func" : BFGS_optimizer, "name": "BFGS-OPT", "color": "red"},
+    { "func" : Newton_optimizer, "name": "Newton-OPT", "color": "red"},
+    { "func" : L_BFGS_B_optimizer, "name": "L-BFGS-B-OPT", "color": "red"},
+    { "func" : TNC_optimizer, "name": "TNC-OPT", "color": "red"},
 ]
 
 def main():
@@ -70,13 +76,15 @@ def main():
 
 
     for optimizer in optimizers:
+        print("Running function: ", optimizer["name"])
+
         new_line = x_init_line[1:-1].flatten()
 
         start_time = time.time()
 
         convergence_points = []
         for iteration in range(iterations):
-            res = optimizer(new_line, obj_fun_op, 1)
+            res = optimizer["func"](new_line, obj_fun_op, 1)
             new_line = res.x
             convergence_points.append((iteration,res.fun))
 
