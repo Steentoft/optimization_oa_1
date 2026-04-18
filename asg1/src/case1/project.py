@@ -24,11 +24,11 @@ obstacles = [
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
-n_points = 100
+n_points = 20
 epochs = 1000
 
 lam = 1
-u = 0.1
+u = 1
 conv_points = []
 
 x_init_line = np.linspace(x_start,x_end,n_points)
@@ -142,7 +142,7 @@ def adamw_step(x, adam_gradient, v, s, t, lr=0.001, gamma_v=0.9, gamma_s=0.999, 
     s_hat = s / (1 - gamma_s**t)
 
     decay = lr * weight_decay * x[1:-1]
-    next_x = (1.0 / (epsilon + an.sqrt(s_hat[1:-1]))) * v_hat[1:-1]
+    next_x = (1.0 / (epsilon + np.sqrt(s_hat[1:-1]))) * v_hat[1:-1]
 
     x[1:-1] = x[1:-1] + next_x - decay
 
@@ -198,32 +198,32 @@ best_momentum = np.copy(x_init_line)
 best_adamw = np.copy(x_init_line)
 best_newton = np.copy(x_init_line)
 
-# for e in range(epochs):
-#     # Momentum
-#     mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=lam,u=u)    
+for e in range(epochs):
+    # Momentum
+    mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=lam,u=u)    
     
-#     if mom_objective_value < min_mom_objective_value:
-#         min_mom_objective_value = mom_objective_value
-#         best_momentum = np.copy(current_mom_path)
+    if mom_objective_value < min_mom_objective_value:
+        min_mom_objective_value = mom_objective_value
+        best_momentum = np.copy(current_mom_path)
 
-#     current_mom_path, velocity = momentum_step(current_mom_path, mom_gradient_array, velocity, lr=0.002, beta=0.6)
+    current_mom_path, velocity = momentum_step(current_mom_path, mom_gradient_array, velocity, lr=0.002, beta=0.6)
     
-#     # AdamW
-#     adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=lam,u=u)    
+    # AdamW
+    adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=lam,u=u)    
 
-#     if adamw_objective_value < min_adamw_objective_value:
-#         min_adamw_objective_value = adamw_objective_value
-#         best_adamw = np.copy(current_adamw_path)
+    if adamw_objective_value < min_adamw_objective_value:
+        min_adamw_objective_value = adamw_objective_value
+        best_adamw = np.copy(current_adamw_path)
 
-#     current_adamw_path, v_adam, s_adam, t = adamw_step(current_adamw_path, adamw_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
+    current_adamw_path, v_adam, s_adam, t = adamw_step(current_adamw_path, adamw_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
 
 # Newtons Method
 start_time = time.time()
 best_newton = newton_step(current_newton_path,lam=lam,u=u,stopcrit=100)
 newton_objective_value, newton_gradient_array = objective_function(best_newton,lam=lam,u=u)    
 
-# ax[0].plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
-# ax[0].plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
+ax[0].plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
+ax[0].plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
 ax[0].plot(best_newton[:, 0], best_newton[:, 1], marker='.', label=f"Best Newton Path | Obj. Val. {newton_objective_value:.2f}")
 
 ax[0].set_xlim(-1, 11)
@@ -241,7 +241,7 @@ ax[1].grid(True)
 file_name = f"N_points: {n_points} | λ: {lam} | μ: {u} | Obj. Val.: {newton_objective_value:.2f} | Penalty 2 | RunTime: {(time.time() - start_time):.4f} secs"
 ax[0].set_xlabel(file_name)
 plt.suptitle("Newtons Method", fontsize=16)
-plt.savefig(f"asg1/src/case1/plots/NewtonsMethhodN{n_points}Lam{lam}Mu{u}Penalty2ObjVal{newton_objective_value:.2f}.png")
+#plt.savefig(f"asg1/src/case1/plots/NewtonsMethhodN{n_points}Lam{lam}Mu{u}Penalty2ObjVal{newton_objective_value:.2f}.png")
 plt.show()
 
 

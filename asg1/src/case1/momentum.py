@@ -1,12 +1,27 @@
 import numpy as np
 
 
-def momentum_step(x,gradient):
-    velocity = np.zeros_like(x)
+def momentum(x,fun,args):
+    this_x = np.copy(x)
+
+    iterations, lr, beta = args[0], args[1], args[2]
+
+    velocity = np.zeros_like(x).flatten()
+    best_line = x.copy().flatten()
+    min_mom_objective_value = np.inf
 
     for i in range(iterations):
+        this_x = np.copy(best_line)
+
+        objective_value, gradient = fun(this_x)
         velocity = beta * velocity - lr * gradient
-        x[1:-1] = x[1:-1] + velocity[1:-1]
+        this_x[1:-1] = this_x[1:-1] + velocity[1:-1]
     
-    return x, velocity
+        if fun(this_x)[0] < min_mom_objective_value:
+            min_mom_objective_value = fun(this_x)[0]
+            best_line = this_x
+
+        print(f"Momentum | Obj. Val.: {fun(this_x)[0]:.2f}")
+
+    return best_line
     
