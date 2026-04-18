@@ -12,6 +12,8 @@ def adamw(x, fun, args):
 
     best_line = np.copy(x)
 
+    convergence_points = []
+
     for i in range(iterations):
         adam_gradient = fun(this_x)[1]
 
@@ -32,4 +34,6 @@ def adamw(x, fun, args):
             min_adam_objective_value = fun(this_x)[0]
             best_line = this_x
 
-    return best_line
+        convergence_points.append(fun(best_line)[0])
+
+    return best_line, convergence_points

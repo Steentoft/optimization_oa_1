@@ -2,3 +2,9 @@
 .idea/inspectionProfiles/Project_Default.xml
 .idea/misc.xml
 /.idea
+asg1/src/case1/__pycache__/adamw.cpython-312.pyc
+asg1/src/case1/__pycache__/gradient_descent.cpython-312.pyc
+asg1/src/case1/__pycache__/main.cpython-312.pyc
+asg1/src/case1/__pycache__/momentum.cpython-312.pyc
+asg1/src/case1/__pycache__/objective_function.cpython-312.pyc
+asg1/src/case1/__pycache__/optimizer.cpython-312.pyc
