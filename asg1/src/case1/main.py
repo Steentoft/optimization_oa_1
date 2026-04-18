@@ -48,7 +48,7 @@ functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "col" : 'red', "args" : [iterations, 0.01]},
     { "func" : momentum, "name" : "Momentum", "col" : 'green', "args" : [iterations, 0.005, 0.9]},
     { "func" : adamw, "name" : "AdamW", "col" : 'orange', "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
-    { "func" : newtonsmethod, "name" : "Newton's Method", "col" : "pink" : 'red', "args" : [iterations, 1e-8, 0.5]}
+    { "func" : newtonsmethod, "name" : "Newton's Method", "col" : 'pink', "args" : [iterations, 1e-8, 0.5]}
 ]
 
 optimizers = [
