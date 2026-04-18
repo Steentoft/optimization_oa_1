@@ -29,7 +29,7 @@ print("size of the 1st training sample: ", train_dataset[0][0].size())
 batch_size = 64
 
 # Create data loaders.
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=len(train_dataset), shuffle=True)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 # Verify size of batches
@@ -87,18 +87,18 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "ADAMWlr0,002wd0,01wCosineAnnealingLRtmaxFullEpochBatchSize64"
+optimizer_name = "LBFGSlr0.002wCosineAnnealingLRtmaxFullEpochBatchSizFull"
 criterion_name = "CrEntLoss" 
 
-# def closure():
-#     optimizer.zero_grad()
-#     closure_output = model(images)
-#     closure_loss = criterion(closure_output, labels)
-#     closure_loss.backward()
-#     return closure_loss
+def closure():
+    optimizer.zero_grad()
+    closure_output = model(images)
+    closure_loss = criterion(closure_output, labels)
+    closure_loss.backward()
+    return closure_loss
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.AdamW(model.parameters(), lr=0.002,weight_decay=0.01)
+optimizer = optim.LBFGS(model.parameters(), lr=0.006, line_search_fn='strong_wolfe')
 n_epochs = 10
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
 train_losses = []
@@ -119,9 +119,10 @@ for epoch in range(n_epochs):
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         output = model(images)
-        loss = criterion(output, labels)
-        backward_loss = loss.backward()
-        optimizer.step()
+        # loss = criterion(output, labels)
+        # backward_loss = loss.backward()
+        # optimizer.step()
+        loss = optimizer.step(closure=closure)
         step += 1
         train_losses.append((step, loss.item()))
 
@@ -186,4 +187,4 @@ plt.xticks(tick_positions, tick_labels)
 # Adjust layout and show the plot
 plt.tight_layout()
 # plt.show()
-plt.savefig(f"{optimizer_name}+{criterion_name}+epoc{n_epochs}")
+plt.savefig(f"{optimizer_name}+{criterion_name}+epoc{n_epochs}.png")

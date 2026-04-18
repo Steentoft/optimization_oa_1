@@ -24,10 +24,11 @@ obstacles = [
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
-n_points = 50
+n_points = 100
 epochs = 1000
-lam = 0.1
-u = 1
+
+lam = 1
+u = 0.1
 conv_points = []
 
 x_init_line = np.linspace(x_start,x_end,n_points)
