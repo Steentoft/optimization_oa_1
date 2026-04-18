@@ -36,7 +36,7 @@ def plot_inner_flat_line(x):
 obj_fun = lambda x: objective_function(x, x_init_line, obstacles)
 
 functions = [
-    gradient_descent,
+    { "func" : gradient_descent, "args" : [iterations, 0.01]},
 ]
 
 optimizers = [
@@ -47,7 +47,7 @@ def main():
 
     for function in functions:
 
-        best_line = function(x_init_line, obj_fun, iterations)
+        best_line = function["func"](x_init_line, obj_fun, function["args"])
 
         best_line = plot_inner_flat_line(best_line)
 

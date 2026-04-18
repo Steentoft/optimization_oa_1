@@ -1,5 +1,7 @@
-def gradient_descent(x, fun, iterations=100, learning_rate=0.01):
+def gradient_descent(x, fun, args):
     x_init_line = x.copy()
+
+    iterations, learning_rate = args[0], args[1]
 
     best_line = x_init_line.copy()[1:-1].flatten()
 
