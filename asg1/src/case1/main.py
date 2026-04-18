@@ -62,7 +62,7 @@ def main():
 
         ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]}")
 
-        ax[1].plot(convergence_points, range(iterations), marker='.', label=f"{function['name']}")
+        ax[1].plot(range(iterations), convergence_points, marker='.', label=f"{function['name']}")
 
 
     for optimizer in optimizers:
@@ -76,7 +76,7 @@ def main():
 
         rebuilt_x = plot_inner_flat_line(res.x)
         ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path")
-        ax[1].plot(convergence_points, range(iterations), marker='.', label=f"Optimizer")
+        ax[1].plot(range(iterations), convergence_points, marker='.', label=f"Optimizer")
 
 
     ax[0].set_xlim(-0.5, 11)
