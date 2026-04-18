@@ -56,6 +56,7 @@ optimizers = [
 def main():
 
     for function in functions:
+        print("Running function: ", function["name"])
         best_line, convergence_points = function["func"](x_init_line, obj_fun, function["args"])
 
         best_line = best_line.reshape((-1, 2))
@@ -83,6 +84,10 @@ def main():
     ax[0].set_xlim(-0.5, 11)
     ax[0].set_ylim(-0.5, 11)
     ax[0].legend()
+
+
+    ax[1].set_xlabel("Iterations")
+    ax[1].set_ylabel("Objective Value")
     ax[1].legend()
     ax[1].grid()
 
