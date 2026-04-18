@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 import autograd.numpy as an
 from autograd import grad, hessian
@@ -21,9 +22,13 @@ obstacles = [
     # (np.array([5,3]), 3.0,'pink')
 ]
 
-fig, ax = plt.subplots(figsize=(6, 6))
+fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
 n_points = 50
+epochs = 1000
+lam = 0.1
+u = 1
+conv_points = []
 
 x_init_line = np.linspace(x_start,x_end,n_points)
 
@@ -36,13 +41,10 @@ x_init_line += noise
 
 
 for j in range(len(obstacles)):
-    ax.add_patch(plt.Circle(obstacles[j][0],obstacles[j][1],color=obstacles[j][2]))
+    ax[0].add_patch(plt.Circle(obstacles[j][0],obstacles[j][1],color=obstacles[j][2]))
 
 
 ########## Task 2 ##########
-
-
-
 ### Path Length
 def f_L(x):
     # For loop version... No bueno
@@ -77,7 +79,7 @@ def f_O(x):
     # For loop version, should also be vectorized.
     sum = 0.0
     for i in range(len(x)):
-        sum += penalty_1(x[i],obstacles)
+        sum += penalty_2(x[i],obstacles)
     return an.sum(sum)
 
 
@@ -115,7 +117,7 @@ def objective_function(x, lam=1, u=2):
     return objective_value, gradient
 
 
-ax.plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
+ax[0].plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
 
 # Momentum
 velocity = np.zeros_like(x_init_line)
@@ -168,20 +170,20 @@ def newton_step(x, lam=1, u=2, epsilon=1e-8, stepsize=0.5, stopcrit=50):
 
         Delta_arr = np.linalg.inv(H_mod) @ grad_f
 
-        if stopcrit / step > 0.75:
+        if stopcrit / step > 0.50:
             x_current = x_current - stepsize * Delta_arr
         else:
             x_current = x_current - Delta_arr
 
         x[1:-1] = x_current.reshape(-1,2)
         Delta_val = np.linalg.norm(Delta_arr)
-        print(f"This is iter.: {step} | Obj. Val.: {(f_obj)(x_current)}")
+        print(f"This is iter.: {step} | Obj. Val.: {(f_obj)(x_current)} | DeltaNorm: {Delta_val:.8f}")
+        conv_points.append((step, (f_obj)(x_current)))
         step += 1
     
     return x
 
 
-epochs = 1000
 best_line = x_init_line
 
 current_mom_path = np.copy(x_init_line)
@@ -197,7 +199,7 @@ best_newton = np.copy(x_init_line)
 
 # for e in range(epochs):
 #     # Momentum
-#     mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=10,u=0.5)    
+#     mom_objective_value, mom_gradient_array = objective_function(current_mom_path,lam=lam,u=u)    
     
 #     if mom_objective_value < min_mom_objective_value:
 #         min_mom_objective_value = mom_objective_value
@@ -206,7 +208,7 @@ best_newton = np.copy(x_init_line)
 #     current_mom_path, velocity = momentum_step(current_mom_path, mom_gradient_array, velocity, lr=0.002, beta=0.6)
     
 #     # AdamW
-#     adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=10,u=0.5)    
+#     adamw_objective_value, adamw_gradient_array = objective_function(current_adamw_path,lam=lam,u=u)    
 
 #     if adamw_objective_value < min_adamw_objective_value:
 #         min_adamw_objective_value = adamw_objective_value
@@ -215,18 +217,30 @@ best_newton = np.copy(x_init_line)
 #     current_adamw_path, v_adam, s_adam, t = adamw_step(current_adamw_path, adamw_gradient_array, v_adam, s_adam, t, lr=0.0002, gamma_v=0.9, gamma_s=0.999, weight_decay=0.13)
 
 # Newtons Method
-best_newton = newton_step(current_newton_path,lam=1000,u=0.5,stopcrit=100)
-newton_objective_value, newton_gradient_array = objective_function(best_newton,lam=1000,u=0.5)    
+start_time = time.time()
+best_newton = newton_step(current_newton_path,lam=lam,u=u,stopcrit=100)
+newton_objective_value, newton_gradient_array = objective_function(best_newton,lam=lam,u=u)    
 
-# ax.plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
-# ax.plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
-ax.plot(best_newton[:, 0], best_newton[:, 1], marker='.', label=f"Best Newton Path | Obj. Val. {newton_objective_value:.2f}")
+# ax[0].plot(best_momentum[:, 0], best_momentum[:, 1], marker='.', label=f"Best Momentum Path | Obj. Val. {mom_objective_value:.2f}")
+# ax[0].plot(best_adamw[:, 0], best_adamw[:, 1], marker='.', label=f"Best AdamW Path | Obj. Val. {adamw_objective_value:.2f}")
+ax[0].plot(best_newton[:, 0], best_newton[:, 1], marker='.', label=f"Best Newton Path | Obj. Val. {newton_objective_value:.2f}")
 
-ax.set_xlim(-1, 11)
-ax.set_ylim(-1, 11)
-ax.legend()
+ax[0].set_xlim(-1, 11)
+ax[0].set_ylim(-1, 11)
+ax[0].legend()
 
-plt.xlabel(f"N_points: {n_points} | λ: 10 | μ: 0.5 | Obj. Val.: {newton_objective_value:.2f}")
+conv_steps, objective_val_point = zip(*conv_points)
+
+ax[1].plot(conv_steps, objective_val_point, color="blue")
+ax[1].set_ylabel("Objective Value")
+#ax[1].legend()
+ax[1].grid(True)
+
+
+file_name = f"N_points: {n_points} | λ: {lam} | μ: {u} | Obj. Val.: {newton_objective_value:.2f} | Penalty 2 | RunTime: {(time.time() - start_time):.4f} secs"
+ax[0].set_xlabel(file_name)
+plt.suptitle("Newtons Method", fontsize=16)
+plt.savefig(f"asg1/src/case1/plots/NewtonsMethhodN{n_points}Lam{lam}Mu{u}Penalty2ObjVal{newton_objective_value:.2f}.png")
 plt.show()
 
 
