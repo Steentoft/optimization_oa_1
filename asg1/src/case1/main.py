@@ -23,14 +23,14 @@ u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
-iterations = 300
+iterations = 100
 
 ### Plotting
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
+fig, ax = plt.subplots(1,2, figsize=(12, 6))
+ax[0].plot(x_init_line[:, 0], x_init_line[:, 1], marker='.', label="Initial Path")
 
 for j in range(len(obstacles)):
-    ax.add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
+    ax[0].add_patch(plt.Circle(obstacles[j][0], obstacles[j][1], color=obstacles[j][2]))
 
 def plot_inner_flat_line(x):
     new_line = x_init_line.copy()
@@ -54,24 +54,34 @@ optimizers = [
 def main():
 
     for function in functions:
-        best_line = function["func"](x_init_line, obj_fun, function["args"])
+        best_line, convergence_points = function["func"](x_init_line, obj_fun, function["args"])
 
         best_line = best_line.reshape((-1, 2))
 
-        ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]}")
+        ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]}")
+
+        ax[1].plot(convergence_points, range(iterations), marker='.', label=f"{function['name']}")
+
 
     for optimizer in optimizers:
         new_line = x_init_line[1:-1].flatten()
 
-        res = optimizer(new_line, obj_fun_op, iterations)
+        convergence_points = []
+        for iteration in range(iterations):
+            res = optimizer(new_line, obj_fun_op, 1)
+            new_line = res.x
+            convergence_points.append(res.fun)
 
         rebuilt_x = plot_inner_flat_line(res.x)
-        ax.plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path")
+        ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path")
+        ax[1].plot(convergence_points, range(iterations), marker='.', label=f"Optimizer")
 
 
-    ax.set_xlim(-0.5, 11)
-    ax.set_ylim(-0.5, 11)
-    ax.legend()
+    ax[0].set_xlim(-0.5, 11)
+    ax[0].set_ylim(-0.5, 11)
+    ax[0].legend()
+    ax[1].legend()
+    ax[1].grid()
 
     plt.show()
 

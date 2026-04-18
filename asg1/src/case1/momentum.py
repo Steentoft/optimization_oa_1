@@ -10,6 +10,8 @@ def momentum(x,fun,args):
     best_line = x.copy().flatten()
     min_mom_objective_value = np.inf
 
+    convergence_points = []
+
     for i in range(iterations):
         this_x = np.copy(best_line)
 
@@ -21,7 +23,10 @@ def momentum(x,fun,args):
             min_mom_objective_value = fun(this_x)[0]
             best_line = this_x
 
-        print(f"Momentum | Obj. Val.: {fun(this_x)[0]:.2f}")
+        #print(f"Momentum | Obj. Val.: {fun(this_x)[0]:.2f}")
 
-    return best_line
+        convergence_points.append(fun(best_line)[0])
+
+
+    return best_line, convergence_points
     
