@@ -38,7 +38,6 @@ def newtonsmethod(x, fun, args):
 
         this_x[1:-1] = x_current.reshape(-1,2)
         Delta_val = np.linalg.norm(Delta_arr)
-        #print(f"This is iter.: {step} | Obj. Val.: {fun(this_x)[0]} | DeltaNorm: {Delta_val:.8f}")
         convergence_points.append((step,fun(x_current)[0]))
         step += 1
 

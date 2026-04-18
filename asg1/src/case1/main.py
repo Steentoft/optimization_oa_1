@@ -20,8 +20,10 @@ obstacles = [
 ]
 
 n_points = 100
-lam = 1
-u = 1
+lam = 0.1
+u = 10
+learning_rate = 0.002
+# Normally learning_rate is 0.002
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
@@ -49,9 +51,9 @@ def plot_inner_flat_line(x):
 
 
 functions = [
-    { "func" : gradient_descent, "name" : "Gradient Descent", "col" : 'red', "args" : [iterations, 0.01]},
-    { "func" : momentum, "name" : "Momentum", "col" : 'green', "args" : [iterations, 0.005, 0.9]},
-    { "func" : adamw, "name" : "AdamW", "col" : 'orange', "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
+    { "func" : gradient_descent, "name" : "Gradient Descent", "col" : 'red', "args" : [iterations, learning_rate]},
+    { "func" : momentum, "name" : "Momentum", "col" : 'green', "args" : [iterations, learning_rate, 0.9]},
+    { "func" : adamw, "name" : "AdamW", "col" : 'orange', "args" : [iterations, learning_rate, 0.9, 0.999, 1e-8, 0.01]},
     { "func" : newtonsmethod, "name" : "Newton's Method", "col" : 'pink', "args" : [iterations, 1e-8, 0.5]}
 ]
 
@@ -71,8 +73,15 @@ def main():
         best_line = best_line.reshape((-1, 2))
 
         conv_steps, objective_val_point = zip(*convergence_points)
-        ax[0][0].plot(best_line[:, 0], best_line[:, 1], marker='.', color=function["col"], label=f"{function["name"]} | Obj. Val.: {objective_val_point[-1]:.2f} | Runtime: {time.time()-start_time:.2f} secs")
-        ax[0][1].plot(conv_steps,objective_val_point, marker='.', color=function["col"], label=f"{function['name']} | Init. Obj. Val.: {objective_val_point[0]:.2f}")
+        
+        init_val = objective_val_point[0]
+        final_val = objective_val_point[-1]
+        
+        f_init = f"{init_val:.2e}" if abs(init_val) >= 10000 else f"{init_val:.2f}"
+        f_final = f"{final_val:.2e}" if abs(final_val) >= 10000 else f"{final_val:.2f}"
+
+        ax[0][0].plot(best_line[:, 0], best_line[:, 1], marker='.', color=function["col"], label=f"{function["name"]} | Obj. Val.: {f_final} | Runtime: {time.time()-start_time:.2f} secs")
+        ax[0][1].plot(conv_steps,objective_val_point, marker='.', color=function["col"], label=f"{function['name']} | Init. Obj. Val.: {f_init}")
 
 
     for optimizer in optimizers:
@@ -106,8 +115,8 @@ def main():
     ax[1][1].set_xlabel("Iterations")
     ax[1][1].set_ylabel("Objective Value")
 
-    ax[0][1].set_ylim(-0.5, 50)
-    ax[1][1].set_ylim(-0.5, 50)
+    ax[0][1].set_ylim(-0.5, 600)
+    ax[1][1].set_ylim(-0.5, 600)
 
     ax[0][1].legend(fontsize=7)
     ax[1][1].legend(fontsize=7)
@@ -115,8 +124,8 @@ def main():
     ax[0][1].grid()
     ax[1][1].grid()
 
-    plt.suptitle(f"N_points: {n_points} | λ: {lam} | μ: {u} |")
-    plt.savefig(f"asg1/src/case1/plots/Npoint{n_points}Lam{lam}Mu{u}Obs-2hit1")
+    plt.suptitle(f"N_points: {n_points} | λ: {lam} | μ: {u} | Learning Rate: {learning_rate}")
+    plt.savefig(f"asg1/src/case1/plots/Npoint{n_points}Lam{str(lam).replace('.', ',')}Mu{str(u).replace('.', ',')}Obs-2hit1Pen2")
     plt.show()
 
 if __name__=="__main__":

@@ -29,7 +29,7 @@ print("size of the 1st training sample: ", train_dataset[0][0].size())
 batch_size = 64
 
 # Create data loaders.
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=len(train_dataset), shuffle=True)
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 # Verify size of batches
@@ -87,20 +87,22 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "LBFGSlr0.002wCosineAnnealingLRtmaxFullEpochBatchSizFull"
+optimizer_name = "SGDlr0.001BatchSize64"
+#SGDlr0.001wCosineAnnealingLRtmaxFullEpochBatchSizFull
 criterion_name = "CrEntLoss" 
 
-def closure():
-    optimizer.zero_grad()
-    closure_output = model(images)
-    closure_loss = criterion(closure_output, labels)
-    closure_loss.backward()
-    return closure_loss
+# def closure():
+#     optimizer.zero_grad()
+#     closure_output = model(images)
+#     closure_loss = criterion(closure_output, labels)
+#     closure_loss.backward()
+#     return closure_loss
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.LBFGS(model.parameters(), lr=0.006, line_search_fn='strong_wolfe')
+#optimizer = optim.LBFGS(model.parameters(), lr=0.006, line_search_fn='strong_wolfe')
+optimizer = optim.SGD(model.parameters(), lr=0.001)
 n_epochs = 10
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
+#scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
 train_losses = []
 test_losses = []
 test_accuracies = []
@@ -119,10 +121,10 @@ for epoch in range(n_epochs):
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         output = model(images)
-        # loss = criterion(output, labels)
-        # backward_loss = loss.backward()
-        # optimizer.step()
-        loss = optimizer.step(closure=closure)
+        loss = criterion(output, labels)
+        backward_loss = loss.backward()
+        optimizer.step()
+        #loss = optimizer.step(closure=closure)
         step += 1
         train_losses.append((step, loss.item()))
 
@@ -140,8 +142,8 @@ for epoch in range(n_epochs):
     test_loss /= len(test_loader.dataset)
     test_accuracy = 100. * correct / len(test_loader.dataset)
 
-    scheduler.step()
-    current_lr = optimizer.param_groups[0]['lr']
+    # scheduler.step()
+    # current_lr = optimizer.param_groups[0]['lr']
 
     print(f'Epoch {epoch} Loss {test_loss}')
 
