@@ -18,7 +18,7 @@ n_points = 20
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
-iterations = 20
+iterations = 100
 
 ### Plotting
 fig, ax = plt.subplots(figsize=(6, 6))
@@ -46,16 +46,8 @@ optimizers = [
 def main():
 
     for function in functions:
-        best_line = x_init_line.copy()[1:-1].flatten()
 
-        for iteration in range(iterations):
-            next_line = best_line.copy()
-
-            for i in range(iterations):
-                next_line = function(next_line, obj_fun)
-
-            if obj_fun(next_line)[0] < obj_fun(best_line)[0]:
-                best_line = next_line.copy()
+        best_line = function(x_init_line, obj_fun, iterations)
 
         best_line = plot_inner_flat_line(best_line)
 
