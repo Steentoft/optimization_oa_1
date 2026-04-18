@@ -1,5 +1,6 @@
 from objective_function import objective_function, objective_function_op
 from gradient_descent import gradient_descent
+from momentum import momentum_step
 from optimizer import CG_optimizer
 
 import matplotlib.pyplot as plt
@@ -38,6 +39,8 @@ obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles)
 
 functions = [
     { "func" : gradient_descent, "args" : [iterations, 0.01]},
+    { "func" : momentum, "args" : [iterations=100,lr=0.005,beta=0.9]},
+    
 ]
 
 optimizers = [
