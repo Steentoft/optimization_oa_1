@@ -2,6 +2,7 @@ from objective_function import objective_function, objective_function_op
 from gradient_descent import gradient_descent
 from momentum import momentum
 from adamw import adamw
+from newtonmethod import newtonsmethod
 from optimizer import CG_optimizer
 
 import matplotlib.pyplot as plt
@@ -45,6 +46,7 @@ functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
     { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
     { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
+    { "func" : newtonsmethod, "name" : "Newtons Method",  "args" : [iterations, 1e-8, 0.5]}
 ]
 
 optimizers = [
