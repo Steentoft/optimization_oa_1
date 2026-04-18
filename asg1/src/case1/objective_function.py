@@ -36,10 +36,10 @@ def gradient_f_O(x, obstacles):
 def penalty_1(x, obstacles):
     penalty = 0.0
     for i in range(len(obstacles)):
-        if an.linalg.norm(circular_obstacle(x, [obstacles[i]]) > obstacles[i][1]):
-            penalty += 1/(circular_obstacle(x,[obstacles[i]])-obstacles[i][1])**2
-        else:
-            penalty += 999999
+        dist = circular_obstacle(x, obstacles[i])
+        r = obstacles[i][1]
+
+        penalty += an.where(dist > r, 1 / (dist - r)**2, an.inf)
     return penalty
 
 def penalty_2(x, obstacles, alpha=1):
