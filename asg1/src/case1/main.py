@@ -1,4 +1,4 @@
-from objective_function import objective_function
+from objective_function import objective_function, objective_function_op
 from gradient_descent import gradient_descent
 from momentum import momentum
 from adamw import adamw
@@ -18,6 +18,8 @@ obstacles = [
 ]
 
 n_points = 50
+lam = 1
+u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
@@ -36,7 +38,8 @@ def plot_inner_flat_line(x):
     new_line[1:-1] = x
     return new_line
 
-obj_fun = lambda x: objective_function(x, x_init_line, obstacles, 1, 1)
+obj_fun = lambda x: objective_function(x, obstacles)
+obj_fun_op = lambda x: objective_function_op(x, x_init_line, obstacles)
 
 functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
@@ -51,17 +54,16 @@ optimizers = [
 def main():
 
     for function in functions:
-
         best_line = function["func"](x_init_line, obj_fun, function["args"])
 
-        best_line = plot_inner_flat_line(best_line)
+        best_line = best_line.reshape((-1, 2))
 
         ax.plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"Best Path from {function["name"]}")
 
     for optimizer in optimizers:
         new_line = x_init_line[1:-1].flatten()
 
-        res = optimizer(new_line, obj_fun, iterations)
+        res = optimizer(new_line, obj_fun_op, iterations)
 
         rebuilt_x = plot_inner_flat_line(res.x)
         ax.plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path")
