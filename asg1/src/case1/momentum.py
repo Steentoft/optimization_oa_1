@@ -15,7 +15,7 @@ def momentum(x,fun,args):
 
         objective_value, gradient = fun(this_x)
         velocity = beta * velocity - lr * gradient
-        this_x[2:-1] = this_x[2:-1] + velocity[2:-1]
+        this_x[2:-2] = this_x[2:-2] + velocity[2:-2]
     
         if fun(this_x)[0] < min_mom_objective_value:
             min_mom_objective_value = fun(this_x)[0]
