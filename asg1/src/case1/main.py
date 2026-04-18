@@ -24,7 +24,7 @@ u = 1
 
 x_init_line = np.linspace(x_start, x_end, n_points)
 
-iterations = 100
+iterations = 120
 
 ### Plotting
 fig, ax = plt.subplots(1,2, figsize=(12, 6))
@@ -46,7 +46,7 @@ functions = [
     { "func" : gradient_descent, "name" : "Gradient Descent", "args" : [iterations, 0.01]},
     { "func" : momentum, "name" : "Momentum",  "args" : [iterations, 0.005, 0.9]},
     { "func" : adamw, "name" : "AdamW",  "args" : [iterations, 0.001, 0.9, 0.999, 1e-8, 0.01]},
-    { "func" : newtonsmethod, "name" : "Newtons Method",  "args" : [iterations, 1e-8, 0.5]}
+    { "func" : newtonsmethod, "name" : "Newton's Method",  "args" : [iterations, 1e-8, 0.5]}
 ]
 
 optimizers = [
@@ -61,8 +61,8 @@ def main():
         best_line = best_line.reshape((-1, 2))
 
         ax[0].plot(best_line[:, 0], best_line[:, 1], marker='.', label=f"{function["name"]}")
-
-        ax[1].plot(convergence_points, range(iterations), marker='.', label=f"{function['name']}")
+        conv_steps, objective_val_point = zip(*convergence_points)
+        ax[1].plot(conv_steps,objective_val_point, marker='.', label=f"{function['name']}")
 
 
     for optimizer in optimizers:
@@ -72,11 +72,12 @@ def main():
         for iteration in range(iterations):
             res = optimizer(new_line, obj_fun_op, 1)
             new_line = res.x
-            convergence_points.append(res.fun)
+            convergence_points.append((iteration,res.fun))
 
         rebuilt_x = plot_inner_flat_line(res.x)
         ax[0].plot(rebuilt_x[:, 0], rebuilt_x[:, 1], marker='.', label=f"Optimizer Path")
-        ax[1].plot(convergence_points, range(iterations), marker='.', label=f"Optimizer")
+        conv_steps, objective_val_point = zip(*convergence_points)
+        ax[1].plot(conv_steps,objective_val_point, marker='.', label=f"Optimizer")
 
 
     ax[0].set_xlim(-0.5, 11)

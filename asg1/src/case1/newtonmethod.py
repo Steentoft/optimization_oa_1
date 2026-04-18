@@ -7,16 +7,17 @@ def newtonsmethod(x, fun, args):
     step = 1
     Delta_val = 1.0
 
+    convergence_points = []
     stopcrit, epsilon, stepsize = args[0], args[1], args[2]
+    obj_val_only = lambda x_val: fun(x_val)[0]
+    H_func = hessian(obj_val_only)
 
     while Delta_val > epsilon and step < stopcrit:
-        x_current = x[1:-1]
+        x_current = x[1:-1].flatten()
 
         objective_value, grad_f = fun(x_current)
 
-        H = hessian(objective_value)
-        
-        print(H)
+        H = H_func(x_current)
 
         eigenvalues, eigenvectors = np.linalg.eigh(H)
         eigenvalues = np.maximum(eigenvalues, epsilon)
@@ -31,7 +32,7 @@ def newtonsmethod(x, fun, args):
 
         x[1:-1] = x_current.reshape(-1,2)
         Delta_val = np.linalg.norm(Delta_arr)
-        print(f"This is iter.: {step} | Obj. Val.: {(fun)(x_current)} | DeltaNorm: {Delta_val:.8f}")
+        convergence_points.append((step,fun(x_current)[0]))
         step += 1
-    
-    return x
+
+    return x, convergence_points

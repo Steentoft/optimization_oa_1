@@ -18,6 +18,6 @@ def gradient_descent(x, fun, args):
         if fun(next_line)[0] < fun(best_line)[0]:
             best_line = next_line.copy()
 
-        convergence_points.append(fun(best_line)[0])
+        convergence_points.append((iteration,fun(best_line)[0]))
 
     return best_line, convergence_points
