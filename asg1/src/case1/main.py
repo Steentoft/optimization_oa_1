@@ -19,8 +19,10 @@ for z in [20,50, 100]:
             obstacles = [
                 # (np.array([2, 4]), 1.3, 'blue'),
                 # (np.array([4, 8]), 1.0, 'orange')
+
                 #(np.array([2,4]), 1.3, 'blue'),
                 #(np.array([5,7]), 1.0,'orange'),
+                
                 (np.array([3.5,5]), 2.5, 'blue'),
             ]
 
