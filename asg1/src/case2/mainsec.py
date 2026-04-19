@@ -29,7 +29,7 @@ print("size of the 1st training sample: ", train_dataset[0][0].size())
 batch_size = 64
 
 # Create data loaders.
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=len(train_dataset), shuffle=True)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 # Verify size of batches
@@ -87,16 +87,30 @@ print(fc12_params[1].numel())
 # raise SystemExit
 
 # Training loop
-optimizer_name = "ADAMWlr0,002wd0,006wCosineAnnealingLRtmaxFullEpochBatchSize64"
+optimizer_name = "LBFGSlr0.006CosineAnnealingLRBatchSizeFull"
+#SGDlr0.001wCosineAnnealingLRtmaxFullEpochBatchSizFull
 criterion_name = "CrEntLoss" 
 
+def closure():
+    optimizer.zero_grad()
+    closure_output = model(images)
+    closure_loss = criterion(closure_output, labels)
+    closure_loss.backward()
+    return closure_loss
+
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.AdamW(model.parameters(), lr=0.002, weight_decay=0.006)
+optimizer = optim.LBFGS(model.parameters(), lr=0.006, line_search_fn='strong_wolfe')
 n_epochs = 10
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
 train_losses = []
 test_losses = []
 test_accuracies = []
+
+#### Either ADAMlr0,002 or SGDlr0,02NestMom0,9 is best
+#### ADAMWlr0,002wd0,01 Performing alike maybe a bit better
+#### ADAMWlr0,002wd0,006 SCORED 90 in accuracy as the first YEAH!
+#### NADAMlr0,002 is good, and so is RMSPROPlr0,002wSTEPlrG0,5step3
+#### ADAMWlr0,002wd0,006 scoring 90,7 
 
 step = 0
 for epoch in range(n_epochs):
@@ -105,9 +119,10 @@ for epoch in range(n_epochs):
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         output = model(images)
-        loss = criterion(output, labels)
-        backward_loss = loss.backward()
-        optimizer.step()
+        # loss = criterion(output, labels)
+        # backward_loss = loss.backward()
+        # optimizer.step()
+        loss = optimizer.step(closure=closure)
         step += 1
         train_losses.append((step, loss.item()))
 
@@ -140,6 +155,7 @@ for epoch in range(n_epochs):
 # plot train and test losses to file loss.png
 train_steps, train_loss = zip(*train_losses)
 test_steps, test_loss = zip(*test_losses)
+#test_steps, test_accuracy = zip(*test_accuracies)
 
 fig, ax = plt.subplots(3, 1, figsize=(8, 10), sharex=True)  # sharex aligns x-axes
 
